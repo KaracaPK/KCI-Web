@@ -537,7 +537,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 
 <section id="page-pay" class="page">
   <div class="pg-header">
-    <div class="pg-title" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">เงินห้อง <i data-lucide="dollar-sign" class="inline-ico"></i><span id="pay-header-total" style="font-size:14px;font-weight:800;color:var(--green);background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.28);border-radius:20px;padding:3px 14px;letter-spacing:.3px;display:none"></span></div>
+    <div class="pg-title" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">เงินห้อง <i data-lucide="dollar-sign" class="inline-ico"></i><span id="pay-header-week-total" style="font-size:13px;font-weight:800;color:var(--green);background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.28);border-radius:20px;padding:3px 12px;letter-spacing:.3px;display:inline-block">💰 รวม 0฿</span><span id="pay-header-all-total" style="font-size:13px;font-weight:800;color:var(--accent2);background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.25);border-radius:20px;padding:3px 12px;letter-spacing:.3px;display:inline-block">📊 รวมทั้งหมด 0฿</span></div>
     <div class="pg-sub" id="pay-sub-title">ระบบเก็บเงินห้อง 4/2</div>
   </div>
   <div class="guest-wall" id="pay-guest-wall">
@@ -573,7 +573,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <div class="pay-stats" id="pay-stats-row"></div>
     <div class="section-head">
       <span class="section-title">รายชื่อ</span>
-      <button class="btn btn-sm btn-outline" onclick="openHistoryModal()"><i data-lucide="clipboard" class="btn-ico"></i> ประวัติ</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-outline" onclick="openHistoryModal()"><i data-lucide="clipboard" class="btn-ico"></i> ประวัติจ่าย</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--accent2);border-color:var(--accent2)" onclick="openExpenseHistoryModal()"><i data-lucide="trending-down" class="btn-ico"></i> ประวัติใช้เงิน</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--gold,#f59e0b);border-color:var(--gold,#f59e0b)" onclick="openLoanHistoryModal()"><i data-lucide="hand-coins" class="btn-ico"></i> ประวัติยืมเงิน</button>
+      </div>
     </div>
     <div id="pay-list"></div>
   </div>
@@ -587,6 +591,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchAdminTab('members')"><i data-lucide="users" class="inline-ico"></i> สมาชิก</button>
     <button class="admin-tab" onclick="switchAdminTab('payment')"><i data-lucide="dollar-sign" class="inline-ico"></i> เงินห้อง</button>
+    <button class="admin-tab" onclick="switchAdminTab('finance')"><i data-lucide="trending-down" class="inline-ico"></i> การเงิน</button>
     <button class="admin-tab" onclick="switchAdminTab('walletcfg')"><i data-lucide="settings" class="inline-ico"></i> ตั้งค่า</button>
     <button class="admin-tab" onclick="switchAdminTab('perms')"><i data-lucide="lock" class="inline-ico"></i> สิทธิ์</button>
     <button class="admin-tab" onclick="switchAdminTab('admins')"><i data-lucide="user-check" class="inline-ico"></i> บัญชีแอดมิน</button>
@@ -670,8 +675,121 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       <div class="input-group"><label>หมายเหตุ</label><input type="text" id="ap-note" placeholder="ไม่บังคับ"/></div>
       <button class="btn btn-success" onclick="addPayment()"><i data-lucide="check" class="btn-ico"></i> บันทึก</button>
     </div>
+    <div class="card glass-panel" style="margin-bottom:14px;margin-top:14px">
+      <div class="section-head" style="margin-bottom:12px"><span class="section-title"><i data-lucide="zap" class="inline-ico"></i> เติมเงินอัตโนมัติ</span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">ใส่รหัสนักเรียนและจำนวนเงินรวม ระบบจะแบ่งจ่ายแต่ละสัปดาห์ให้อัตโนมัติตามค่าห้องที่ตั้งไว้</p>
+      <div class="input-group">
+        <label>รหัสนักเรียน</label>
+        <div class="hybrid-select-wrapper">
+          <input type="text" id="af-sid" placeholder="พิมพ์รหัสเอง เช่น 66001" style="width:50%"/>
+          <select id="af-sid-dropdown" onmousedown="prepareAutoFillDropdown()" onchange="document.getElementById('af-sid').value=this.value" style="width:50%">
+            <option value="">-- กดเพื่อเลือกรายชื่อ --</option>
+          </select>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>จำนวนเงินที่จะเติม (฿)</label>
+        <input type="number" id="af-amount" placeholder="เช่น 80" min="1"/>
+      </div>
+      <div class="input-group">
+        <label>หมายเหตุ (ไม่บังคับ)</label>
+        <input type="text" id="af-note" placeholder="ไม่บังคับ"/>
+      </div>
+      <div id="af-preview" style="margin-bottom:12px;display:none">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px">ตัวอย่างการแบ่งจ่าย</div>
+        <div id="af-preview-list" style="font-size:13px"></div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="previewAutoFill()"><i data-lucide="eye" class="btn-ico"></i> ดูตัวอย่าง</button>
+        <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmAutoFill()"><i data-lucide="zap" class="btn-ico"></i> เติมเงิน</button>
+      </div>
+    </div>
     <div class="section-head"><span class="section-title">ประวัติล่าสุด</span></div>
-    <div id="pay-history-admin"></div>
+    <div id="pay-history-admin" style="max-height:480px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:4px 0"></div>
+  </div>
+
+  <div class="admin-panel" id="ap-finance">
+    <!-- ── SUMMARY BAR ── -->
+    <div class="card glass-panel" style="margin-bottom:14px">
+      <div class="section-head" style="margin-bottom:12px"><span class="section-title">📊 สรุปการเงินห้อง</span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center">
+        <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">เงินเก็บได้ทั้งหมด</div>
+          <div id="fin-total-collected" style="font-size:16px;font-weight:800;color:var(--green)">0฿</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">ใช้ไปแล้ว</div>
+          <div id="fin-total-expense" style="font-size:16px;font-weight:800;color:#ef4444">0฿</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">ยืมออกไป</div>
+          <div id="fin-total-loan" style="font-size:16px;font-weight:800;color:#f59e0b">0฿</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;padding:10px 14px;background:var(--card);border-radius:10px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px;color:var(--text2)">คงเหลือสุทธิ</span>
+        <span id="fin-net" style="font-size:18px;font-weight:900;color:var(--accent)">0฿</span>
+      </div>
+    </div>
+
+    <!-- ── SUB TABS ── -->
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <button id="ftab-expense" class="admin-tab active" style="flex:1;text-align:center" onclick="switchFinanceTab('expense')">💸 บันทึกการใช้เงิน</button>
+      <button id="ftab-loan" class="admin-tab" style="flex:1;text-align:center" onclick="switchFinanceTab('loan')">🤝 บันทึกการยืมเงิน</button>
+    </div>
+
+    <!-- ── EXPENSE PANEL ── -->
+    <div id="fin-expense-panel">
+      <div class="card glass-panel" style="margin-bottom:14px">
+        <div class="section-head" style="margin-bottom:12px"><span class="section-title">💸 เพิ่มการใช้เงิน</span></div>
+        <div class="input-group">
+          <label>จำนวนเงิน (฿)</label>
+          <input type="number" id="exp-amount" placeholder="เช่น 150" min="1"/>
+        </div>
+        <div class="input-group">
+          <label>ใช้ไปทำอะไร</label>
+          <input type="text" id="exp-desc" placeholder="เช่น ซื้อของใช้ในห้อง"/>
+        </div>
+        <button class="btn btn-primary" onclick="addExpense()"><i data-lucide="plus" class="btn-ico"></i> บันทึกการใช้เงิน</button>
+      </div>
+      <div class="section-head"><span class="section-title">ประวัติการใช้เงิน</span></div>
+      <div id="expense-history-list" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:4px 0"></div>
+    </div>
+
+    <!-- ── LOAN PANEL ── -->
+    <div id="fin-loan-panel" style="display:none">
+      <div class="card glass-panel" style="margin-bottom:14px">
+        <div class="section-head" style="margin-bottom:12px"><span class="section-title">🤝 บันทึกการยืมเงิน</span></div>
+        <div class="input-group">
+          <label>ผู้ยืม (รหัสนักเรียน / ค้นหา)</label>
+          <div class="hybrid-select-wrapper">
+            <input type="text" id="loan-sid" placeholder="พิมพ์รหัส เช่น 66001" style="width:50%"/>
+            <select id="loan-sid-dropdown" onmousedown="prepareLoanDropdown()" onchange="document.getElementById('loan-sid').value=this.value" style="width:50%">
+              <option value="">-- กดเพื่อเลือกรายชื่อ --</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>จำนวนเงินที่ยืม (฿)</label>
+          <input type="number" id="loan-amount" placeholder="เช่น 100" min="1"/>
+        </div>
+        <div class="input-group">
+          <label>กำหนดคืน</label>
+          <div style="display:flex;gap:8px">
+            <button id="loan-due-3" class="btn btn-outline btn-sm" style="flex:1" onclick="setLoanDue(3)">3 วัน</button>
+            <button id="loan-due-7" class="btn btn-outline btn-sm" style="flex:1" onclick="setLoanDue(7)">7 วัน</button>
+          </div>
+          <input type="date" id="loan-due-date" style="margin-top:8px" readonly/>
+        </div>
+        <div class="input-group">
+          <label>หมายเหตุ</label>
+          <input type="text" id="loan-note" placeholder="ไม่บังคับ"/>
+        </div>
+        <button class="btn btn-warning" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4)" onclick="addLoan()"><i data-lucide="hand-coins" class="btn-ico"></i> บันทึกการยืม</button>
+      </div>
+      <div class="section-head"><span class="section-title">ประวัติการยืมเงิน</span></div>
+      <div id="loan-history-list" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:4px 0"></div>
+    </div>
   </div>
 
   <div class="admin-panel" id="ap-walletcfg">
@@ -1032,6 +1150,23 @@ function startListeners(){
     PAYMENTS = snap.val()||{};
     renderPayment();
     renderPayHistoryAdmin();
+    renderFinanceSummary();
+  });
+
+  // ── EXPENSES LISTENER ─────────────────────────────────────────────
+  onValue(ref(DB,'expenses'), snap=>{
+    EXPENSES = snap.val()||{};
+    renderExpenseHistory();
+    renderFinanceSummary();
+    if(document.getElementById('expenseHistoryModal')?.classList.contains('open')) renderExpenseHistoryModal();
+  });
+
+  // ── LOANS LISTENER ────────────────────────────────────────────────
+  onValue(ref(DB,'loans'), snap=>{
+    LOANS = snap.val()||{};
+    renderLoanHistory();
+    renderFinanceSummary();
+    if(document.getElementById('loanHistoryModal')?.classList.contains('open')) renderLoanHistoryModal();
   });
 
   // ── PERMS LISTENER ────────────────────────────────────────────────
@@ -1600,6 +1735,7 @@ const SVG_ICONS = {
   'trash-2': `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>`,
   'users': `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
   'dollar-sign': `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>`,
+  'edit': `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;display:inline"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
 };
 function svgIco(name){ return SVG_ICONS[name] || ''; }
 
@@ -1665,17 +1801,18 @@ function renderPayTable(){
 
   const roomFilter=document.getElementById('payRoomFilter')?.value||'';
 
-  // คำนวณยอดเงินรวมทั้งหมดที่เก็บได้ในสัปดาห์นี้
+
+  // คำนวณยอดรวมสัปดาห์นี้
   const _weekTotal = Object.values(PAYMENTS).filter(p=>
     String(p.year||getCurrentYear())===String(year) &&
     String(p.month)===String(month) &&
     String(p.week)===String(week)
   ).reduce((s,p)=>s+parseFloat(p.amount||0),0);
-  const _totalEl = document.getElementById('pay-header-total');
-  if(_totalEl){
-    _totalEl.textContent = '💰 รวม ' + _weekTotal.toLocaleString('th-TH') + '฿';
-    _totalEl.style.display = _weekTotal > 0 ? 'inline-block' : 'none';
-  }
+  // คำนวณยอดรวมทั้งหมดทุกสัปดาห์ทุกเดือน
+  const _allTotal = Object.values(PAYMENTS).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+  const _wkEl = document.getElementById('pay-header-week-total');
+  if(_wkEl) _wkEl.textContent = '💰 รวมสัปดาห์นี้ ' + _weekTotal.toLocaleString('th-TH') + '฿';
+  renderFinanceSummary(); // อัปเดต badge รวมสุทธิ (หักค่าใช้จ่ายและเงินยืม)
 
   const studentPaidRecordMap = {};
   Object.values(PAYMENTS).forEach(p=>{
@@ -1779,12 +1916,12 @@ function renderHistory(){
 
 /* ── ADMIN PANEL FUNCTIONS ── */
 function switchAdminTab(tab){
-  const tabNames=['members','payment','walletcfg','perms','admins','cmd'];
+  const tabNames=['members','payment','finance','walletcfg','perms','admins','cmd'];
   document.querySelectorAll('.admin-tab').forEach((b,i)=>{
     b.className='admin-tab'+(tabNames[i]===tab?' active':'');
   });
-  ['ap-members','ap-payment','ap-walletcfg','ap-perms','ap-admins','ap-cmd'].forEach(id=>document.getElementById(id).className='admin-panel');
-  const map={members:'ap-members',payment:'ap-payment',walletcfg:'ap-walletcfg',perms:'ap-perms',admins:'ap-admins',cmd:'ap-cmd'};
+  ['ap-members','ap-payment','ap-finance','ap-walletcfg','ap-perms','ap-admins','ap-cmd'].forEach(id=>document.getElementById(id).className='admin-panel');
+  const map={members:'ap-members',payment:'ap-payment',finance:'ap-finance',walletcfg:'ap-walletcfg',perms:'ap-perms',admins:'ap-admins',cmd:'ap-cmd'};
   document.getElementById(map[tab]).className='admin-panel active';
 
   if(tab === 'payment') {
@@ -1792,6 +1929,11 @@ function switchAdminTab(tab){
   }
   if(tab === 'walletcfg') {
     renderWalletConfigEditor();
+  }
+  if(tab === 'finance') {
+    renderFinanceSummary();
+    renderExpenseHistory();
+    renderLoanHistory();
   }
 }
 
@@ -2144,9 +2286,207 @@ async function addPayment(){
   resetPaymentDropdown();
 }
 
+/* ══════════════════════════════════════════════
+   FINANCE SYSTEM – EXPENSES & LOANS
+   ══════════════════════════════════════════════ */
+let EXPENSES = {};
+let LOANS = {};
+
+// ── Firebase listeners (called from initFirebase or similar) ──
+function initFinanceListeners(DB, onVal, ref){
+  onVal(ref(DB,'expenses'), snap=>{ EXPENSES=snap.val()||{}; renderExpenseHistory(); renderFinanceSummary(); });
+  onVal(ref(DB,'loans'),    snap=>{ LOANS=snap.val()||{};    renderLoanHistory();    renderFinanceSummary(); });
+}
+
+function renderFinanceSummary(){
+  const totalCollected = Object.values(PAYMENTS).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+  const totalExpense   = Object.values(EXPENSES).reduce((s,e)=>s+parseFloat(e.amount||0),0);
+  const totalLoan      = Object.values(LOANS).filter(l=>!l.returned).reduce((s,l)=>s+parseFloat(l.amount||0),0);
+  const net = totalCollected - totalExpense - totalLoan;
+  const setEl = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val.toLocaleString('th-TH')+'฿'; };
+  setEl('fin-total-collected', totalCollected);
+  setEl('fin-total-expense',   totalExpense);
+  setEl('fin-total-loan',      totalLoan);
+  const netEl=document.getElementById('fin-net');
+  if(netEl){ netEl.textContent=net.toLocaleString('th-TH')+'฿'; netEl.style.color=net>=0?'var(--green)':'#ef4444'; }
+  // update all-total badge in pay page too
+  const atEl=document.getElementById('pay-header-all-total');
+  if(atEl){
+    const badge = totalCollected - totalExpense - totalLoan;
+    atEl.textContent='📊 รวมสุทธิ '+badge.toLocaleString('th-TH')+'฿';
+    atEl.style.color=badge>=0?'var(--accent2)':'#ef4444';
+  }
+}
+
+function switchFinanceTab(tab){
+  document.getElementById('fin-expense-panel').style.display = tab==='expense'?'':'none';
+  document.getElementById('fin-loan-panel').style.display    = tab==='loan'?'':'none';
+  document.getElementById('ftab-expense').className='admin-tab'+(tab==='expense'?' active':'');
+  document.getElementById('ftab-loan').className   ='admin-tab'+(tab==='loan'?' active':'');
+}
+
+// ── EXPENSES ──
+async function addExpense(){
+  if(!DB||SESSION?.role!=='admin')return;
+  const amount=parseFloat(document.getElementById('exp-amount').value)||0;
+  const desc=document.getElementById('exp-desc').value.trim();
+  if(!amount||!desc){alert('กรุณาระบุจำนวนเงินและรายการ');return;}
+  const{ref,push,set}=FUNS;
+  await set(push(ref(DB,'expenses')),{
+    amount, desc, by:SESSION.name||SESSION.username, ts:Date.now()
+  });
+  document.getElementById('exp-amount').value='';
+  document.getElementById('exp-desc').value='';
+}
+
+function renderExpenseHistory(){
+  const el=document.getElementById('expense-history-list'); if(!el)return;
+  const arr=Object.entries(EXPENSES).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีรายการใช้เงิน</div>';return;}
+  el.innerHTML=arr.map(([id,e])=>{
+    const timeStr=e.ts?new Date(e.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    return `<div class="history-item">
+      <div class="history-icon" style="background:rgba(239,68,68,0.12);color:#ef4444">💸</div>
+      <div class="history-info">
+        <div class="history-title">${escapeHtml(e.desc||'—')}</div>
+        <div class="history-sub">${timeStr} · บันทึกโดย ${escapeHtml(e.by||'—')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="history-amt" style="color:#ef4444">-${parseFloat(e.amount).toLocaleString('th-TH')}฿</div>
+        <button class="icon-btn danger" style="width:30px;height:30px;font-size:13px;flex-shrink:0" onclick="deleteExpense('${id}')" title="ลบ">${svgIco('trash-2')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteExpense(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  const{ref,remove}=FUNS; await remove(ref(DB,`expenses/${id}`));
+}
+
+// ── LOANS ──
+function setLoanDue(days){
+  const d=new Date(); d.setDate(d.getDate()+days);
+  const iso=d.toISOString().split('T')[0];
+  document.getElementById('loan-due-date').value=iso;
+  document.getElementById('loan-due-3').className='btn btn-sm'+(days===3?' btn-primary':' btn-outline');
+  document.getElementById('loan-due-7').className='btn btn-sm'+(days===7?' btn-primary':' btn-outline');
+}
+
+function prepareLoanDropdown(){
+  const dd=document.getElementById('loan-sid-dropdown');
+  if(!dd||dd.dataset.ready)return;
+  const members=Object.values(MEMBERS).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  dd.innerHTML='<option value="">-- กดเพื่อเลือกรายชื่อ --</option>'+
+    members.map(m=>`<option value="${escapeHtml(String(m.studentId))}">${escapeHtml(m.name||m.studentId)} (${m.studentId})</option>`).join('');
+  dd.dataset.ready='1';
+}
+
+async function addLoan(){
+  if(!DB||SESSION?.role!=='admin')return;
+  const sid=document.getElementById('loan-sid').value.trim();
+  const amount=parseFloat(document.getElementById('loan-amount').value)||0;
+  const dueDate=document.getElementById('loan-due-date').value;
+  const note=document.getElementById('loan-note').value.trim();
+  if(!sid||!amount||!dueDate){alert('กรุณากรอกผู้ยืม จำนวนเงิน และกำหนดคืน');return;}
+  const member=Object.values(MEMBERS).find(m=>String(m.studentId)===String(sid));
+  const borrowerName=member?.name||sid;
+  const{ref,push,set}=FUNS;
+  await set(push(ref(DB,'loans')),{
+    studentId:sid, borrowerName, amount, dueDate, note,
+    by:SESSION.name||SESSION.username, ts:Date.now(), returned:false
+  });
+  document.getElementById('loan-sid').value='';
+  document.getElementById('loan-amount').value='';
+  document.getElementById('loan-due-date').value='';
+  document.getElementById('loan-note').value='';
+  const dd=document.getElementById('loan-sid-dropdown'); if(dd){dd.value='';dd.dataset.ready='';}
+  document.getElementById('loan-due-3').className='btn btn-sm btn-outline';
+  document.getElementById('loan-due-7').className='btn btn-sm btn-outline';
+}
+
+function renderLoanHistory(){
+  const el=document.getElementById('loan-history-list'); if(!el)return;
+  const arr=Object.entries(LOANS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีประวัติการยืม</div>';return;}
+  el.innerHTML=arr.map(([id,l])=>{
+    const timeStr=l.ts?new Date(l.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    const dueDisplay=l.dueDate?new Date(l.dueDate).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'—';
+    const now=Date.now(); const dueMs=l.dueDate?new Date(l.dueDate).getTime():0;
+    const overdue=!l.returned&&dueMs&&dueMs<now;
+    const statusBadge=l.returned
+      ?`<span style="font-size:11px;background:rgba(52,211,153,0.15);color:var(--green);border-radius:20px;padding:2px 8px;font-weight:700">คืนแล้ว</span>`
+      :overdue
+        ?`<span style="font-size:11px;background:rgba(239,68,68,0.12);color:#ef4444;border-radius:20px;padding:2px 8px;font-weight:700">เกินกำหนด</span>`
+        :`<span style="font-size:11px;background:rgba(245,158,11,0.12);color:#f59e0b;border-radius:20px;padding:2px 8px;font-weight:700">ค้างคืน</span>`;
+    return `<div class="history-item" style="${overdue?'border-left:3px solid #ef4444;':''}">
+      <div class="history-icon" style="background:rgba(245,158,11,0.12);color:#f59e0b">🤝</div>
+      <div class="history-info" style="flex:1;min-width:0">
+        <div class="history-title">${escapeHtml(l.borrowerName||l.studentId||'—')} ${statusBadge}</div>
+        <div class="history-sub">บันทึก ${timeStr}</div>
+        <div class="history-sub">คืน ${dueDisplay}${l.note?' · '+escapeHtml(l.note):''}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+        <div class="history-amt" style="color:#f59e0b">${parseFloat(l.amount).toLocaleString('th-TH')}฿</div>
+        <div style="display:flex;gap:4px">
+          ${!l.returned?`<button class="btn btn-sm" style="padding:3px 8px;font-size:11px;background:rgba(52,211,153,0.15);color:var(--green);border:1px solid rgba(52,211,153,0.3)" onclick="markLoanReturned('${id}')">✅ คืนแล้ว</button>`:''}
+          <button class="icon-btn danger" style="width:28px;height:28px;font-size:12px" onclick="deleteLoan('${id}')" title="ลบ">${svgIco('trash-2')}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function markLoanReturned(id){
+  if(!DB)return;
+  const{ref,update}=FUNS; await update(ref(DB,`loans/${id}`),{returned:true});
+}
+
+async function deleteLoan(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  const{ref,remove}=FUNS; await remove(ref(DB,`loans/${id}`));
+}
+
+// ── Expense/Loan history modals (from pay page buttons) ──
+function openExpenseHistoryModal(){
+  renderExpenseHistoryModal();
+  openModal('expenseHistoryModal');
+}
+function renderExpenseHistoryModal(){
+  const el=document.getElementById('ehm-body'); if(!el)return;
+  const arr=Object.entries(EXPENSES).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีรายการใช้เงิน</div>';return;}
+  const totalExp=arr.reduce((s,[,e])=>s+parseFloat(e.amount||0),0);
+  el.innerHTML=`<div style="padding:10px 14px;margin-bottom:10px;background:rgba(239,68,68,0.08);border-radius:10px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--text2)">ใช้ไปทั้งหมด</span><span style="font-weight:800;color:#ef4444;font-size:16px">-${totalExp.toLocaleString('th-TH')}฿</span></div>`+
+    arr.map(([,e])=>{
+      const timeStr=e.ts?new Date(e.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      return `<div class="history-item"><div class="history-icon" style="background:rgba(239,68,68,0.1);color:#ef4444">💸</div><div class="history-info"><div class="history-title">${escapeHtml(e.desc||'—')}</div><div class="history-sub">${timeStr}</div></div><div class="history-amt" style="color:#ef4444">-${parseFloat(e.amount).toLocaleString('th-TH')}฿</div></div>`;
+    }).join('');
+}
+
+function openLoanHistoryModal(){
+  renderLoanHistoryModal();
+  openModal('loanHistoryModal');
+}
+function renderLoanHistoryModal(){
+  const el=document.getElementById('lhm-body'); if(!el)return;
+  const arr=Object.entries(LOANS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีประวัติการยืม</div>';return;}
+  const totalLoan=arr.filter(([,l])=>!l.returned).reduce((s,[,l])=>s+parseFloat(l.amount||0),0);
+  el.innerHTML=`<div style="padding:10px 14px;margin-bottom:10px;background:rgba(245,158,11,0.08);border-radius:10px;display:flex;justify-content:space-between;align-items:center"><span style="font-size:13px;color:var(--text2)">ค้างคืนทั้งหมด</span><span style="font-weight:800;color:#f59e0b;font-size:16px">${totalLoan.toLocaleString('th-TH')}฿</span></div>`+
+    arr.map(([,l])=>{
+      const timeStr=l.ts?new Date(l.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      const dueDisplay=l.dueDate?new Date(l.dueDate).toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'—';
+      const now=Date.now(); const dueMs=l.dueDate?new Date(l.dueDate).getTime():0;
+      const overdue=!l.returned&&dueMs&&dueMs<now;
+      const statusTxt=l.returned?'✅ คืนแล้ว':overdue?'⚠️ เกินกำหนด':'⏳ ค้างคืน';
+      return `<div class="history-item"><div class="history-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b">🤝</div><div class="history-info"><div class="history-title">${escapeHtml(l.borrowerName||l.studentId||'—')} <span style="font-size:11px;opacity:.8">${statusTxt}</span></div><div class="history-sub">บันทึก ${timeStr}</div><div class="history-sub">กำหนดคืน ${dueDisplay}${l.note?' · '+escapeHtml(l.note):''}</div></div><div class="history-amt" style="color:#f59e0b">${parseFloat(l.amount).toLocaleString('th-TH')}฿</div></div>`;
+    }).join('');
+}
+
 function renderPayHistoryAdmin(){
   const el=document.getElementById('pay-history-admin');if(!el)return;
-  const arr=Object.entries(PAYMENTS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0)).slice(0,10);
+  const arr=Object.entries(PAYMENTS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
   if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีประวัติ</div>';return;}
   el.innerHTML=arr.map(([id,p])=>{
     const by = p.by || '';
@@ -2154,7 +2494,8 @@ function renderPayHistoryAdmin(){
     if(!actor) actor = Object.values(MEMBERS||{}).find(m=>String(m.studentId)===String(by) || String(m.name)===String(by));
     const actorAvatar = avatarEmoji(actor || by);
     const actorName = actor ? (actor.name || actor.username || by) : (by || p.by || '—');
-    return `<div class="history-item"><div class="history-icon in">${actorAvatar}</div><div class="history-info"><div class="history-title">${escapeHtml((p.studentName||p.studentId||''))} · ส.${p.week} ${MONTHS[(p.month||1)-1]} ${p.year||getCurrentYear()}</div><div class="history-sub">${p.note||''} · บันทึกโดย ${escapeHtml(actorName)}</div></div><div style="display:flex;align-items:center;gap:8px"><div class="history-amt in">+${p.amount}฿</div><button class="icon-btn danger" title="ลบรายการนี้" style="width:32px;height:32px;font-size:14px;flex-shrink:0" onclick="deletePayment('${id}')">${svgIco('trash-2')}</button></div></div>`;
+    const timeStr = p.ts ? new Date(p.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    return `<div class="history-item"><div class="history-icon in">${actorAvatar}</div><div class="history-info"><div class="history-title">${escapeHtml((p.studentName||p.studentId||''))} · ส.${p.week} ${MONTHS[(p.month||1)-1]} ${p.year||getCurrentYear()}</div><div class="history-sub">${timeStr}${p.note?' · '+escapeHtml(p.note):''} · บันทึกโดย ${escapeHtml(actorName)}</div></div><div style="display:flex;align-items:center;gap:6px"><div class="history-amt in">+${p.amount}฿</div><button class="icon-btn" title="แก้ไขจำนวนเงิน" style="width:32px;height:32px;font-size:13px;flex-shrink:0;color:var(--accent);border-color:var(--accent)" onclick="openEditPaymentModal('${id}')">${svgIco('edit')}</button><button class="icon-btn danger" title="ลบรายการนี้" style="width:32px;height:32px;font-size:14px;flex-shrink:0" onclick="deletePayment('${id}')">${svgIco('trash-2')}</button></div></div>`;
   }).join('');
   try{ if(window.lucide && typeof window.lucide.replace==='function') window.lucide.replace(); }catch(e){}
 }
@@ -2162,6 +2503,153 @@ function renderPayHistoryAdmin(){
 async function deletePayment(id){
   if(!confirm('ลบรายการนี้?'))return;
   const{ref,remove}=FUNS;await remove(ref(DB,`payments/${id}`));
+}
+
+function openEditPaymentModal(id){
+  const p=PAYMENTS[id];
+  if(!p)return;
+  document.getElementById('epm-id').value=id;
+  document.getElementById('epm-amount').value=p.amount||'';
+  document.getElementById('epm-note').value=p.note||'';
+  const timeStr=p.ts?new Date(p.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+  document.getElementById('epm-info').innerHTML=
+    `<div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:4px">${escapeHtml(p.studentName||p.studentId||'—')}</div>`+
+    `<div style="font-size:12px;color:var(--text2)">สัปดาห์ที่ ${p.week} · ${MONTHS[(p.month||1)-1]} ${p.year||getCurrentYear()}</div>`+
+    `<div style="font-size:12px;color:var(--accent2);margin-top:2px">${timeStr}</div>`;
+  openModal('editPaymentModal');
+}
+
+async function saveEditPayment(){
+  const id=document.getElementById('epm-id').value;
+  const amount=parseFloat(document.getElementById('epm-amount').value);
+  const note=document.getElementById('epm-note').value.trim();
+  if(!id||isNaN(amount)||amount<0){alert('กรุณาระบุจำนวนเงินให้ถูกต้อง');return;}
+  const{ref,update}=FUNS;
+  await update(ref(DB,`payments/${id}`),{amount,note});
+  closeModal('editPaymentModal');
+}
+
+/* ── AUTO-FILL PAYMENT UTILITIES ── */
+
+// สร้างรายการสัปดาห์ทั้งหมดที่ยังค้างจ่ายของนักเรียน
+function getAutoFillPlan(sid, totalAmount) {
+  const year = getCurrentYear();
+  // รวบรวมทุก year/month ที่มีใน WALLET_CONFIG หรือมีใน PAYMENTS
+  const ymSet = new Set();
+  // จาก WALLET_CONFIG
+  Object.entries(WALLET_CONFIG||{}).forEach(([y,months])=>{
+    Object.keys(months).forEach(m=>ymSet.add(`${y}_${m}`));
+  });
+  // จาก PAYMENTS (เผื่อมีข้อมูลที่ไม่ได้ตั้งค่า)
+  Object.values(PAYMENTS).forEach(p=>{
+    ymSet.add(`${p.year||year}_${p.month}`);
+  });
+  // ถ้าว่างให้ใช้เดือนปัจจุบัน
+  if(!ymSet.size) ymSet.add(`${year}_${new Date().getMonth()+1}`);
+
+  // เรียงตาม year asc, month asc
+  const ymArr = [...ymSet].map(s=>{const[y,m]=s.split('_');return{y:parseInt(y),m:parseInt(m)};})
+    .sort((a,b)=> a.y!==b.y ? a.y-b.y : a.m-b.m);
+
+  // สร้าง paid map: key = `y_m_w`, value = totalPaid
+  const paidMap = {};
+  Object.values(PAYMENTS).forEach(p=>{
+    const k = `${p.year||year}_${p.month}_${p.week}`;
+    paidMap[k] = (paidMap[k]||0) + parseFloat(p.amount||0);
+  });
+
+  const plan = [];
+  let remaining = totalAmount;
+
+  for(const {y,m} of ymArr){
+    if(remaining <= 0) break;
+    const cfg = getWalletConfig(y, m);
+    const totalWeeks = cfg.weeks || 4;
+    for(let w=1; w<=totalWeeks; w++){
+      if(remaining <= 0) break;
+      const fee = getWeekFee(y, m, w);
+      // ค้นหาว่านักเรียนคนนี้จ่ายไปเท่าไหร่แล้วสำหรับสัปดาห์นี้
+      let alreadyPaid = 0;
+      Object.values(PAYMENTS).forEach(p=>{
+        if(String(p.studentId)===String(sid) &&
+           String(p.year||year)===String(y) &&
+           String(p.month)===String(m) &&
+           String(p.week)===String(w)){
+          alreadyPaid += parseFloat(p.amount||0);
+        }
+      });
+      const stillNeeded = fee - alreadyPaid;
+      if(stillNeeded <= 0) continue; // จ่ายครบแล้ว ข้ามไป
+      const pay = Math.min(remaining, stillNeeded);
+      plan.push({year:y, month:m, week:w, fee, alreadyPaid, pay});
+      remaining -= pay;
+    }
+  }
+  return { plan, remaining };
+}
+
+function prepareAutoFillDropdown(){
+  const dd = document.getElementById('af-sid-dropdown');
+  if(!dd || dd.dataset.ready) return;
+  const members = Object.values(MEMBERS).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  dd.innerHTML = '<option value="">-- กดเพื่อเลือกรายชื่อ --</option>' +
+    members.map(m=>`<option value="${escapeHtml(String(m.studentId))}">${escapeHtml(m.name||m.studentId)} (${m.studentId})</option>`).join('');
+  dd.dataset.ready = '1';
+}
+
+function previewAutoFill(){
+  const sid = document.getElementById('af-sid').value.trim();
+  const amount = parseFloat(document.getElementById('af-amount').value)||0;
+  const previewEl = document.getElementById('af-preview');
+  const listEl = document.getElementById('af-preview-list');
+  if(!sid || !amount){ alert('กรุณากรอกรหัสนักเรียนและจำนวนเงิน'); return; }
+  const member = Object.values(MEMBERS).find(m=>String(m.studentId)===String(sid));
+  const {plan, remaining} = getAutoFillPlan(sid, amount);
+  if(!plan.length){ listEl.innerHTML='<div style="color:var(--green);padding:8px">✅ นักเรียนจ่ายครบทุกสัปดาห์แล้ว</div>'; previewEl.style.display='block'; return; }
+  listEl.innerHTML =
+    `<div style="margin-bottom:8px;color:var(--text);font-weight:600">${member?escapeHtml(member.name):sid}</div>` +
+    plan.map(p=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;margin-bottom:4px;background:var(--card);border-radius:8px;font-size:12px">
+      <span>${MONTHS[p.month-1]} ${p.year} ส.${p.week}</span>
+      <span style="color:var(--text2)">${p.alreadyPaid>0?`จ่ายไปแล้ว ${p.alreadyPaid}฿ / `:''}ค่าห้อง ${p.fee}฿</span>
+      <span style="color:var(--green);font-weight:700">+${p.pay}฿</span>
+    </div>`).join('') +
+    (remaining>0 ? `<div style="margin-top:8px;padding:8px;background:rgba(251,191,36,0.1);border-radius:8px;font-size:12px;color:var(--gold)">⚠️ เงินคงเหลือ ${remaining}฿ (ทุกสัปดาห์ที่ตั้งค่าไว้จ่ายครบแล้ว)</div>` : '');
+  previewEl.style.display = 'block';
+}
+
+async function confirmAutoFill(){
+  const sid = document.getElementById('af-sid').value.trim();
+  const amount = parseFloat(document.getElementById('af-amount').value)||0;
+  const note = document.getElementById('af-note').value.trim();
+  if(!sid || !amount){ alert('กรุณากรอกรหัสนักเรียนและจำนวนเงิน'); return; }
+  const {plan} = getAutoFillPlan(sid, amount);
+  if(!plan.length){ alert('นักเรียนคนนี้จ่ายครบทุกสัปดาห์ที่ตั้งค่าไว้แล้ว'); return; }
+  const member = Object.values(MEMBERS).find(m=>String(m.studentId)===String(sid));
+  const sName = member?.name || sid;
+  const summary = plan.map(p=>`${MONTHS[p.month-1]} ${p.year} ส.${p.week}: +${p.pay}฿`).join('\n');
+  if(!confirm(`เติมเงินให้ ${sName} จำนวน ${plan.length} สัปดาห์?\n\n${summary}`)) return;
+  const{ref,push,set}=FUNS;
+  const year = getCurrentYear();
+  for(const p of plan){
+    await set(push(ref(DB,'payments')),{
+      studentId: sid,
+      studentName: sName,
+      month: p.month,
+      week: p.week,
+      year: p.year,
+      amount: p.pay,
+      note: note || 'เติมเงินอัตโนมัติ',
+      by: SESSION.name||SESSION.username,
+      ts: Date.now()
+    });
+  }
+  document.getElementById('af-sid').value='';
+  document.getElementById('af-amount').value='';
+  document.getElementById('af-note').value='';
+  document.getElementById('af-preview').style.display='none';
+  const dd = document.getElementById('af-sid-dropdown');
+  if(dd){ dd.value=''; dd.dataset.ready=''; }
+  alert(`เติมเงินเรียบร้อย ${plan.length} รายการ รวม ${plan.reduce((s,p)=>s+p.pay,0)}฿`);
 }
 
 /* ── PERMISSIONS & NAVIGATION ── */
@@ -2665,5 +3153,49 @@ window.addEventListener('load', ensureLucideIcons);
 window.addEventListener('firebase-ready', ensureLucideIcons);
 ensureLucideIcons();
 </script>
+<div class="modal-overlay" id="editPaymentModal" onclick="closeModal('editPaymentModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">แก้ไขรายการจ่ายเงิน</span>
+      <button class="modal-close" onclick="closeModal('editPaymentModal')"><i data-lucide="x" class="modal-close-ico"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="epm-id"/>
+      <div id="epm-info" style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px"></div>
+      <div class="input-group">
+        <label>จำนวนเงินที่จ่าย (฿)</label>
+        <input type="number" id="epm-amount" placeholder="เช่น 20" min="0"/>
+      </div>
+      <div class="input-group">
+        <label>หมายเหตุ</label>
+        <input type="text" id="epm-note" placeholder="ไม่บังคับ"/>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline" onclick="closeModal('editPaymentModal')">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveEditPayment()">บันทึก</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="expenseHistoryModal" onclick="closeModal('expenseHistoryModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">💸 ประวัติการใช้เงิน</span>
+      <button class="modal-close" onclick="closeModal('expenseHistoryModal')"><i data-lucide="x" class="modal-close-ico"></i></button>
+    </div>
+    <div class="modal-body" id="ehm-body"><span class="loading-spinner"></span></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="loanHistoryModal" onclick="closeModal('loanHistoryModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">🤝 ประวัติการยืมเงิน</span>
+      <button class="modal-close" onclick="closeModal('loanHistoryModal')"><i data-lucide="x" class="modal-close-ico"></i></button>
+    </div>
+    <div class="modal-body" id="lhm-body"><span class="loading-spinner"></span></div>
+  </div>
+</div>
+
 </body>
 </html>
