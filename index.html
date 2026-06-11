@@ -712,10 +712,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <!-- ── SUMMARY BAR ── -->
     <div class="card glass-panel" style="margin-bottom:14px">
       <div class="section-head" style="margin-bottom:12px"><span class="section-title">📊 สรุปการเงินห้อง</span></div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:center">
         <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);border-radius:10px;padding:10px 6px">
           <div style="font-size:11px;color:var(--text2);margin-bottom:4px">เงินเก็บได้ทั้งหมด</div>
           <div id="fin-total-collected" style="font-size:16px;font-weight:800;color:var(--green)">0฿</div>
+        </div>
+        <div style="background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.25);border-radius:10px;padding:10px 6px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">รายได้เพิ่มเติม</div>
+          <div id="fin-total-income" style="font-size:16px;font-weight:800;color:var(--accent)">0฿</div>
         </div>
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:10px 6px">
           <div style="font-size:11px;color:var(--text2);margin-bottom:4px">ใช้ไปแล้ว</div>
@@ -733,9 +737,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     </div>
 
     <!-- ── SUB TABS ── -->
-    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px">
-      <button id="ftab-expense" class="admin-tab active" style="flex:1;text-align:center" onclick="switchFinanceTab('expense')">💸 บันทึกการใช้เงิน</button>
-      <button id="ftab-loan" class="admin-tab" style="flex:1;text-align:center" onclick="switchFinanceTab('loan')">🤝 บันทึกการยืมเงิน</button>
+    <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:16px;overflow-x:auto">
+      <button id="ftab-expense" class="admin-tab active" style="flex:1;text-align:center;white-space:nowrap;min-width:0" onclick="switchFinanceTab('expense')">💸 บันทึกการใช้เงิน</button>
+      <button id="ftab-loan" class="admin-tab" style="flex:1;text-align:center;white-space:nowrap;min-width:0" onclick="switchFinanceTab('loan')">🤝 บันทึกการยืมเงิน</button>
+      <button id="ftab-income" class="admin-tab" style="flex:1;text-align:center;white-space:nowrap;min-width:0" onclick="switchFinanceTab('income')">💰 บันทึกการได้เงิน</button>
     </div>
 
     <!-- ── EXPENSE PANEL ── -->
@@ -789,6 +794,24 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       </div>
       <div class="section-head"><span class="section-title">ประวัติการยืมเงิน</span></div>
       <div id="loan-history-list" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:4px 0"></div>
+    </div>
+
+    <!-- ── INCOME PANEL ── -->
+    <div id="fin-income-panel" style="display:none">
+      <div class="card glass-panel" style="margin-bottom:14px">
+        <div class="section-head" style="margin-bottom:12px"><span class="section-title">💰 เพิ่มรายการได้เงิน</span></div>
+        <div class="input-group">
+          <label>จำนวนเงินที่ได้ (฿)</label>
+          <input type="number" id="inc-amount" placeholder="เช่น 500" min="1"/>
+        </div>
+        <div class="input-group">
+          <label>ที่มา / คำอธิบาย</label>
+          <input type="text" id="inc-desc" placeholder="เช่น เงินสนับสนุนจากโรงเรียน"/>
+        </div>
+        <button class="btn btn-success" onclick="addIncome()"><i data-lucide="plus" class="btn-ico"></i> บันทึกการได้เงิน</button>
+      </div>
+      <div class="section-head"><span class="section-title">ประวัติการได้เงิน</span></div>
+      <div id="income-history-list" style="max-height:400px;overflow-y:auto;border:1px solid var(--border);border-radius:12px;padding:4px 0"></div>
     </div>
   </div>
 
@@ -1167,6 +1190,13 @@ function startListeners(){
     renderLoanHistory();
     renderFinanceSummary();
     if(document.getElementById('loanHistoryModal')?.classList.contains('open')) renderLoanHistoryModal();
+  });
+
+  // ── INCOMES LISTENER ──────────────────────────────────────────────
+  onValue(ref(DB,'incomes'), snap=>{
+    INCOMES = snap.val()||{};
+    renderIncomeHistory();
+    renderFinanceSummary();
   });
 
   // ── PERMS LISTENER ────────────────────────────────────────────────
@@ -1934,6 +1964,8 @@ function switchAdminTab(tab){
     renderFinanceSummary();
     renderExpenseHistory();
     renderLoanHistory();
+    renderIncomeHistory();
+    switchFinanceTab('expense');
   }
 }
 
@@ -2291,20 +2323,24 @@ async function addPayment(){
    ══════════════════════════════════════════════ */
 let EXPENSES = {};
 let LOANS = {};
+let INCOMES = {};
 
 // ── Firebase listeners (called from initFirebase or similar) ──
 function initFinanceListeners(DB, onVal, ref){
   onVal(ref(DB,'expenses'), snap=>{ EXPENSES=snap.val()||{}; renderExpenseHistory(); renderFinanceSummary(); });
   onVal(ref(DB,'loans'),    snap=>{ LOANS=snap.val()||{};    renderLoanHistory();    renderFinanceSummary(); });
+  onVal(ref(DB,'incomes'),  snap=>{ INCOMES=snap.val()||{};  renderIncomeHistory();  renderFinanceSummary(); });
 }
 
 function renderFinanceSummary(){
   const totalCollected = Object.values(PAYMENTS).reduce((s,p)=>s+parseFloat(p.amount||0),0);
+  const totalIncome    = Object.values(INCOMES).reduce((s,i)=>s+parseFloat(i.amount||0),0);
   const totalExpense   = Object.values(EXPENSES).reduce((s,e)=>s+parseFloat(e.amount||0),0);
   const totalLoan      = Object.values(LOANS).filter(l=>!l.returned).reduce((s,l)=>s+parseFloat(l.amount||0),0);
-  const net = totalCollected - totalExpense - totalLoan;
+  const net = totalCollected + totalIncome - totalExpense - totalLoan;
   const setEl = (id,val)=>{ const el=document.getElementById(id); if(el) el.textContent=val.toLocaleString('th-TH')+'฿'; };
   setEl('fin-total-collected', totalCollected);
+  setEl('fin-total-income',    totalIncome);
   setEl('fin-total-expense',   totalExpense);
   setEl('fin-total-loan',      totalLoan);
   const netEl=document.getElementById('fin-net');
@@ -2312,7 +2348,7 @@ function renderFinanceSummary(){
   // update all-total badge in pay page too
   const atEl=document.getElementById('pay-header-all-total');
   if(atEl){
-    const badge = totalCollected - totalExpense - totalLoan;
+    const badge = totalCollected + totalIncome - totalExpense - totalLoan;
     atEl.textContent='📊 รวมสุทธิ '+badge.toLocaleString('th-TH')+'฿';
     atEl.style.color=badge>=0?'var(--accent2)':'#ef4444';
   }
@@ -2321,8 +2357,10 @@ function renderFinanceSummary(){
 function switchFinanceTab(tab){
   document.getElementById('fin-expense-panel').style.display = tab==='expense'?'':'none';
   document.getElementById('fin-loan-panel').style.display    = tab==='loan'?'':'none';
+  document.getElementById('fin-income-panel').style.display  = tab==='income'?'':'none';
   document.getElementById('ftab-expense').className='admin-tab'+(tab==='expense'?' active':'');
   document.getElementById('ftab-loan').className   ='admin-tab'+(tab==='loan'?' active':'');
+  document.getElementById('ftab-income').className ='admin-tab'+(tab==='income'?' active':'');
 }
 
 // ── EXPENSES ──
@@ -2445,6 +2483,45 @@ async function markLoanReturned(id){
 async function deleteLoan(id){
   if(!confirm('ลบรายการนี้?'))return;
   const{ref,remove}=FUNS; await remove(ref(DB,`loans/${id}`));
+}
+
+// ── INCOMES ──
+async function addIncome(){
+  if(!DB||SESSION?.role!=='admin')return;
+  const amount=parseFloat(document.getElementById('inc-amount').value)||0;
+  const desc=document.getElementById('inc-desc').value.trim();
+  if(!amount||!desc){alert('กรุณาระบุจำนวนเงินและที่มา/คำอธิบาย');return;}
+  const{ref,push,set}=FUNS;
+  await set(push(ref(DB,'incomes')),{
+    amount, desc, by:SESSION.name||SESSION.username, ts:Date.now()
+  });
+  document.getElementById('inc-amount').value='';
+  document.getElementById('inc-desc').value='';
+}
+
+function renderIncomeHistory(){
+  const el=document.getElementById('income-history-list'); if(!el)return;
+  const arr=Object.entries(INCOMES).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
+  if(!arr.length){el.innerHTML='<div class="empty-state">ยังไม่มีรายการได้เงิน</div>';return;}
+  el.innerHTML=arr.map(([id,i])=>{
+    const timeStr=i.ts?new Date(i.ts).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+    return `<div class="history-item">
+      <div class="history-icon in" style="background:rgba(129,140,248,0.12);color:var(--accent)">💰</div>
+      <div class="history-info">
+        <div class="history-title">${escapeHtml(i.desc||'—')}</div>
+        <div class="history-sub">${timeStr} · บันทึกโดย ${escapeHtml(i.by||'—')}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="history-amt in" style="color:var(--accent)">+${parseFloat(i.amount).toLocaleString('th-TH')}฿</div>
+        <button class="icon-btn danger" style="width:30px;height:30px;font-size:13px;flex-shrink:0" onclick="deleteIncome('${id}')" title="ลบ">${svgIco('trash-2')}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function deleteIncome(id){
+  if(!confirm('ลบรายการนี้?'))return;
+  const{ref,remove}=FUNS; await remove(ref(DB,`incomes/${id}`));
 }
 
 // ── Expense/Loan history modals (from pay page buttons) ──
