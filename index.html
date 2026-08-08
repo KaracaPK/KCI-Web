@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
   window.addEventListener('DOMContentLoaded', function(){
     try{ if(window.lucide && typeof window.lucide.replace === 'function') window.lucide.replace(); }catch(e){}
@@ -30,6 +31,7 @@ window.dispatchEvent(new Event('firebase-ready'));
 <style>
 /* ── TOKENS & CYBER-LUXURY DESIGN ── */
 :root{
+  --page-max: 1180px;
   --bg:#030712; --bg2:#090d16; --surface:rgba(15,23,42,0.6); --card:rgba(17,24,39,0.7);
   --card2:rgba(30,41,59,0.8); --border:rgba(255,255,255,0.06); --border2:rgba(255,255,255,0.12);
   --accent:#818cf8; --accent2:#22d3ee; --pink:#f472b6; --gold:#fbbf24;
@@ -68,8 +70,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .nav-btn:hover{color:var(--text2)}
 .nav-btn.active{color:var(--accent2)}
 .nav-btn.active .ico{transform:scale(1.2) translateY(-2px);filter:drop-shadow(0 0 8px rgba(34,211,238,0.4))}
-.page{position:relative;z-index:1;min-height:100vh;padding:calc(var(--top-h) + 24px) 16px calc(var(--nav-h) + 28px);max-width:580px;margin:0 auto;display:none;will-change:transform,opacity}
+.page{position:relative;z-index:1;min-height:100vh;padding:calc(var(--top-h) + 24px) 16px calc(var(--nav-h) + 28px);max-width:var(--page-max);margin:0 auto;display:none;will-change:transform,opacity}
 .page.active{display:block;animation:pgIn .32s cubic-bezier(0.22, 1, 0.36, 1) both}
+@media(min-width:900px){.page{padding:calc(var(--top-h) + 28px) 24px calc(var(--nav-h) + 32px)}}
 @keyframes pgIn{from{opacity:0;transform:translateY(12px) scale(0.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 #page-login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px 20px;max-width:100%}
 #page-login.active{display:flex}
@@ -104,7 +107,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .pg-header{margin-bottom:24px}
 .pg-title{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .pg-sub{color:var(--text2);font-size:13px;margin-top:4px}
-.card{border-radius:var(--r);padding:22px;margin-bottom:16px}
+.card{border-radius:var(--r);padding:22px;margin-bottom:16px;max-width:100%}
+@media(max-width:640px){.card{padding:18px}}
 .card2{background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;margin-bottom:10px}
 .student-hero{background:linear-gradient(135deg,rgba(129,140,248,0.18),rgba(34,211,238,0.12));border:1px solid rgba(129,140,248,0.22);border-radius:var(--r);padding:24px 20px;display:flex;align-items:center;gap:18px;margin-bottom:24px}
 .hero-avatar{width:64px;height:64px;border-radius:50%;font-size:32px;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(129,140,248,0.35)}
@@ -114,7 +118,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .role-admin{background:rgba(251,191,36,0.15);color:var(--gold);border:1px solid rgba(251,191,36,0.3)}
 .role-student{background:rgba(34,211,238,0.12);color:var(--accent2);border:1px solid rgba(34,211,238,0.25)}
 .role-guest{background:rgba(148,163,184,0.1);color:var(--text2);border:1px solid var(--border2)}
-.score-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px}
+.score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:24px}
+@media(max-width:640px){.score-grid{grid-template-columns:1fr 1fr;gap:10px}.score-card{padding:16px 10px}}
+@media(max-width:480px){.score-grid{grid-template-columns:1fr}}
 .score-card{border-radius:16px;padding:20px 12px;text-align:center;border:1px solid transparent;cursor:pointer;transition:transform .2s cubic-bezier(0.34,1.56,0.64,1),box-shadow .2s ease,border-color .2s;user-select:none;will-change:transform}
 .score-card:hover{transform:translateY(-6px) scale(1.02)}
 .score-card:active{transform:scale(.95)}
@@ -127,15 +133,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .score-card.bad .sc-val{color:var(--red)}
 .score-card.tot .sc-val{color:var(--purple)}
 .sc-lbl{font-size:11px;color:var(--text2);margin-top:6px;font-weight:600;letter-spacing:.3px}
-.action-row{display:flex;gap:12px}
-.action-row .btn{flex:1;padding:14px}
-.pay-selector-container{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.action-row{display:flex;gap:12px;flex-wrap:wrap}
+.action-row .btn{flex:1;min-width:180px;padding:14px}
+@media(max-width:560px){.action-row{flex-direction:column}.action-row .btn{width:100%;min-width:0}}
+.pay-selector-container{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px}
 .wallet-select{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 16px;font-family:inherit;font-size:14px;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
 .wallet-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(129,140,248,0.15)}
+@media(max-width:560px){.pay-selector-container{grid-template-columns:1fr}}
+@media(max-width:480px){.topbar-right{gap:6px}.logo{font-size:14px}.logo-emoji{font-size:20px}#profileBtn{padding:6px 10px 6px 6px;font-size:12px}}
 .wallet-filter-row{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:4px}
 .wallet-filter-btn{flex-shrink:0;padding:8px 16px;border-radius:20px;border:1px solid var(--border2);background:var(--card);color:var(--text2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
 .wallet-filter-btn.active{background:linear-gradient(135deg,var(--accent),#6366f1);border-color:transparent;color:#fff;box-shadow:0 2px 10px rgba(129,140,248,0.25)}
-.pay-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.pay-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:18px}
+@media(max-width:560px){.pay-stats{grid-template-columns:1fr}}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;text-align:center}
 .stat-val{font-size:26px;font-weight:900}
 .stat-lbl{font-size:12px;color:var(--text2);margin-top:4px;font-weight:600}
@@ -145,9 +155,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .pay-status.paid{background:rgba(52,211,153,0.15);color:var(--green)}
 .pay-status.unpaid{background:rgba(248,113,113,0.12);color:var(--red)}
 .pay-status.incomplete{background:rgba(251,191,36,0.12);color:var(--gold)}
-.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
 .section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px}
-.history-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.history-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.history-info{flex:1;min-width:0}
 .history-icon{width:38px;height:38px;border-radius:50%;font-size:18px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
 .history-icon.in{background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)}
 .history-info{flex:1}
@@ -165,9 +176,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .input-group input,.input-group select{width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
 .input-group select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
 .input-group input:focus,.input-group select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(129,140,248,.15)}
-.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.member-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.input-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:640px){.input-row{grid-template-columns:1fr}}
+.member-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r-sm);padding:13px 16px;display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap}
 .member-info{flex:1;min-width:0}
+.member-actions{display:flex;gap:6px;flex-wrap:wrap}
 .member-name{font-size:14px;font-weight:600}
 .member-id{font-size:11px;color:var(--text2);margin-top:2px}
 .member-actions{display:flex;gap:6px}
@@ -184,8 +197,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .toggle-slider::after{content:'';position:absolute;left:3px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .3s,background .3s}
 .toggle input:checked+.toggle-slider{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
 .toggle input:checked+.toggle-slider::after{transform:translate(20px,-50%);background:#fff}
-.hybrid-select-wrapper{position:relative;display:flex;gap:8px}
-.hybrid-select-wrapper select{flex:1}
+.hybrid-select-wrapper{position:relative;display:flex;gap:8px;flex-wrap:wrap}
+.hybrid-select-wrapper input,.hybrid-select-wrapper select{flex:1;min-width:200px}
+@media(max-width:640px){.hybrid-select-wrapper{flex-direction:column}.hybrid-select-wrapper input,.hybrid-select-wrapper select{width:100%;min-width:0}}
 .terminal{background:#050810;border:1px solid rgba(34,211,238,.25);border-radius:var(--r-sm);overflow:hidden;font-family:'Courier New',monospace}
 .terminal-header{background:rgba(34,211,238,.06);padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(34,211,238,.15)}
 .term-dot{width:10px;height:10px;border-radius:50%}
@@ -210,15 +224,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:200;display:flex;align-items:flex-end;justify-content:center;padding:0;opacity:0;pointer-events:none;transition:opacity .2s ease}
 @media(min-width:500px){.modal-overlay{align-items:center;padding:16px}}
 .modal-overlay.open{opacity:1;pointer-events:all}
-.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;width:100%;max-width:480px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(50px) scale(.96);transition:transform .28s cubic-bezier(0.22,1,0.36,1),opacity .2s ease;box-shadow:0 30px 80px rgba(0,0,0,.6);opacity:0}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:24px;width:min(100%,480px);max-width:480px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;transform:translateY(50px) scale(.96);transition:transform .28s cubic-bezier(0.22,1,0.36,1),opacity .2s ease;box-shadow:0 30px 80px rgba(0,0,0,.6);opacity:0}
+@media(max-width:499px){.modal{width:100%}}
 @media(max-width:499px){.modal{border-radius:24px 24px 0 0}}
 .modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
 .modal-head{padding:18px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0}
 .modal-title{font-size:15px;font-weight:700}
 .modal-close{width:30px;height:30px;border-radius:50%;background:var(--surface);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .modal-close:hover{background:rgba(248,113,113,.2);color:var(--red)}
-.modal-body{overflow-y:auto;padding:20px;flex:1}
-#profilePanel{position:fixed;top:var(--top-h);right:0;z-index:150;width:min(320px,calc(100vw - 24px));background:var(--bg2);border:1px solid var(--border2);border-radius:0 0 20px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateY(-20px);opacity:0;pointer-events:none;transition:all .25s}
+.modal-body{overflow-y:auto;padding:20px;flex:1;min-width:0}
+#profilePanel{position:fixed;top:var(--top-h);right:0;z-index:150;width:min(320px,calc(100vw - 24px));background:var(--bg2);border:1px solid var(--border2);border-radius:0 0 20px 20px;box-shadow:0 20px 60px rgba(0,0,0,.5);transform:translateY(-20px);opacity:0;pointer-events:none;transition:all .25s;max-height:calc(100vh - var(--top-h) - 12px);overflow:auto}
 #profilePanel.open{transform:translateY(0);opacity:1;pointer-events:all}
 .profile-head{padding:20px;border-bottom:1px solid var(--border)}
 .profile-avatar{width:60px;height:60px;border-radius:50%;font-size:30px;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;margin-bottom:12px}
@@ -273,6 +288,54 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .wc-fee-label{flex:1;font-size:13px;font-weight:600}
 .wc-fee-input{width:100px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:14px;outline:none}
 .wc-fee-input:focus{border-color:var(--accent)}
+
+/* ── ROOM SUMMARY TABLE (สรุปเงินห้อง) ── */
+.room-summary-export-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid rgba(129,140,248,0.25);background:rgba(129,140,248,0.12);color:var(--accent);border-radius:999px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s ease}
+.room-summary-export-btn:hover{transform:translateY(-1px);background:rgba(129,140,248,0.2)}
+.room-summary-export-btn:disabled{opacity:.7;cursor:wait}
+.room-summary-export-shell{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:12px}
+.room-summary-export-shell .room-summary-controls{margin-bottom:10px}
+.room-summary-export-shell .rsm-totalbar{margin-bottom:10px}
+.room-summary-export-shell .rsm-table-wrap{overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--bg2)}
+.room-summary-export-shell .rsm-table{width:max-content;min-width:100%}
+.room-summary-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.room-summary-controls .wallet-select{min-width:0}
+.rsm-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;font-size:11px;color:var(--text2)}
+.summary-month-picker{margin:8px 0 12px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:rgba(255,255,255,0.03)}
+.summary-month-picker-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:8px}
+.summary-month-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.summary-month-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.summary-month-item input{accent-color:var(--accent)}
+.admin-room-summary-preview{border:1px solid var(--border);background:var(--card);border-radius:14px;padding:12px;margin-top:10px;overflow:visible}
+.admin-room-summary-preview .rsm-totalbar{margin:0 0 10px 0}
+.admin-room-summary-preview .rsm-table-wrap{max-height:none;overflow-x:auto;overflow-y:visible;border:1px solid var(--border);border-radius:12px}
+.admin-room-summary-preview .rsm-table{width:100%;min-width:100%}
+@media(max-width:640px){.room-summary-controls{grid-template-columns:1fr}.summary-month-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rsm-swatch{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.rsm-totalbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);border-radius:var(--r-sm);font-size:12px;margin-bottom:12px}
+.rsm-totalbar .rsm-scope{color:var(--text2)}
+.rsm-totalbar .rsm-total-val{font-weight:800}
+.rsm-table-wrap{width:100%;max-width:100%;overflow:auto;max-height:min(62vh,520px);border-radius:12px;border:1px solid var(--border);-webkit-overflow-scrolling:touch}
+.rsm-table{border-collapse:collapse;font-size:12px;white-space:nowrap;width:max-content;min-width:100%}
+.rsm-table th,.rsm-table td{padding:8px 9px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle}
+.rsm-table thead th{background:var(--card2);font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.2px;position:sticky;top:0;z-index:2}
+.rsm-table tbody tr:last-child td{border-bottom:none}
+.rsm-table tbody tr:hover td{background:rgba(255,255,255,0.03)}
+.rsm-th-name,.rsm-td-name{position:sticky;left:0;z-index:1;background:var(--bg2);text-align:left;font-weight:600;min-width:140px;max-width:220px;width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px}
+.rsm-table thead .rsm-th-name{z-index:3;background:var(--card2)}
+.rsm-fee{font-size:9px;color:var(--muted);font-weight:500;margin-top:2px}
+.rsm-cell{width:42px;font-weight:700;font-size:12px}
+.rsm-paid{background:rgba(52,211,153,0.16);color:var(--green)}
+.rsm-partial{background:rgba(251,191,36,0.18);color:var(--gold)}
+.rsm-unpaid{background:rgba(75,85,99,0.22);color:var(--text2)}
+.rsm-th-total,.rsm-td-total{min-width:92px;width:92px;font-weight:800;white-space:nowrap;padding-left:10px;padding-right:10px}
+.rsm-owe{color:var(--red)}
+.rsm-clear{color:var(--green)}
+#roomSummaryModal .modal{max-width:min(1120px,calc(100vw - 24px));max-height:min(92vh,860px);display:flex;flex-direction:column;width:min(1120px,calc(100vw - 24px))}
+#roomSummaryModal .modal-body{display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:16px 16px 20px}
+#roomSummaryModal .rsm-table-wrap{flex:1 1 auto;min-height:0}
+@media(max-width:640px){.room-summary-controls{grid-template-columns:1fr}.rsm-totalbar{flex-direction:column;align-items:flex-start}.rsm-table{font-size:11px}.rsm-table th,.rsm-table td{padding:6px 6px}.rsm-th-name,.rsm-td-name{min-width:96px;max-width:116px}.rsm-cell{width:36px;font-size:11px}#roomSummaryModal .modal-body{padding:12px 12px 16px}}
+@media(min-width:900px){#roomSummaryModal .modal{max-width:min(1120px,calc(100vw - 24px))}#roomSummaryModal .modal-body{padding:20px 22px}}
 
 /* ── REPORT TABLE (รายงานความดี / ประพฤติ) ── */
 .report-table-wrap{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid var(--border)}
@@ -523,6 +586,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
         <option value="">ทุกห้อง</option>
       </select>
       <select id="classSort" class="wallet-select" onchange="renderClassmates()" style="flex:1;min-width:120px;">
+        <option value="number_asc">เลขที่ / ลำดับ</option>
         <option value="name_asc">ชื่อ ก → ฮ</option>
         <option value="name_desc">ชื่อ ฮ → ก</option>
         <option value="score_desc">คะแนน มาก → น้อย</option>
@@ -577,6 +641,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
         <button class="btn btn-sm btn-outline" onclick="openHistoryModal()"><i data-lucide="clipboard" class="btn-ico"></i> ประวัติจ่าย</button>
         <button class="btn btn-sm btn-outline" style="color:var(--accent2);border-color:var(--accent2)" onclick="openExpenseHistoryModal()"><i data-lucide="trending-down" class="btn-ico"></i> ประวัติใช้เงิน</button>
         <button class="btn btn-sm btn-outline" style="color:var(--gold,#f59e0b);border-color:var(--gold,#f59e0b)" onclick="openLoanHistoryModal()"><i data-lucide="hand-coins" class="btn-ico"></i> ประวัติยืมเงิน</button>
+        <button class="btn btn-sm btn-outline" style="color:var(--purple,#a78bfa);border-color:var(--purple,#a78bfa)" onclick="openRoomSummaryModal()"><i data-lucide="table" class="btn-ico"></i> สรุปเงินห้อง</button>
       </div>
     </div>
     <div id="pay-list"></div>
@@ -602,6 +667,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <div class="card glass-panel">
       <div class="section-head" style="margin-bottom:16px"><span class="section-title"><i data-lucide="plus" class="inline-ico"></i> เพิ่มสมาชิก</span></div>
       <div class="input-group"><label>รหัสนักเรียน</label><input type="text" id="am-id" placeholder="เช่น 66001"/></div>
+      <div class="input-group"><label>เลขที่ / ลำดับ</label><input type="number" id="am-number" placeholder="เช่น 1" min="1"/></div>
       <div class="input-group"><label>ชื่อ-นามสกุล</label><input type="text" id="am-name" placeholder="นาย ชื่อ นามสกุล"/></div>
       <div class="input-row">
         <div class="input-group"><label>เบอร์โทร</label><input type="text" id="am-tel" placeholder="08x-xxx-xxxx"/></div>
@@ -702,6 +768,53 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       <div style="display:flex;gap:10px">
         <button class="btn btn-outline btn-sm" style="flex:1" onclick="previewAutoFill()"><i data-lucide="eye" class="btn-ico"></i> ดูตัวอย่าง</button>
         <button class="btn btn-success btn-sm" style="flex:1" onclick="confirmAutoFill()"><i data-lucide="zap" class="btn-ico"></i> เติมเงิน</button>
+      </div>
+    </div>
+
+    <div class="card glass-panel" style="margin-bottom:14px">
+      <div class="section-head" style="margin-bottom:8px"><span class="section-title"><i data-lucide="table" class="inline-ico"></i> ตั้งค่าสรุปเงินห้อง</span></div>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:4px">กำหนดว่าปุ่ม "สรุปเงินห้อง" จะแสดงสัปดาห์ไหนบ้าง</p>
+      <div class="toggle-row">
+        <div><div class="t-title"><i data-lucide="eye" class="inline-ico"></i> แสดงสัปดาห์ที่จ่ายครบแล้ว</div><div class="t-sub">ปิด = แสดงเฉพาะสัปดาห์ที่ยังมีคนจ่ายไม่ครบทุกคน</div></div>
+        <label class="toggle"><input type="checkbox" id="cfg-summary-show-paid" onchange="saveSummaryConfig()"/><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="admin-room-summary-preview">
+        <div class="section-head" style="margin-bottom:10px">
+          <span class="section-title"><i data-lucide="table" class="inline-ico"></i> สรุปเงินห้องตามเดือน</span>
+          <button class="room-summary-export-btn" type="button" onclick="exportRoomSummaryImage('admin-rsm-export-shell','room-summary-admin')"><i data-lucide="image" class="btn-ico"></i> ส่งออก PNG</button>
+        </div>
+        <div class="room-summary-export-shell" id="admin-rsm-export-shell">
+          <div class="room-summary-controls">
+          <select id="admin-rsm-month" class="wallet-select" onchange="renderAdminRoomSummaryPreview()">
+            <option value="all">ทุกเดือน</option>
+            <option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option>
+            <option value="3">มีนาคม</option><option value="4">เมษายน</option>
+            <option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option>
+            <option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option>
+            <option value="9">กันยายน</option><option value="10">ตุลาคม</option>
+            <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+          </select>
+          <select id="admin-rsm-room" class="wallet-select" onmousedown="prepareRoomFilter(this.id)" onchange="renderAdminRoomSummaryPreview()">
+            <option value="">ทุกห้อง</option>
+          </select>
+          <select id="admin-rsm-view" class="wallet-select" onchange="renderAdminRoomSummaryPreview()">
+            <option value="all">แสดงทุกคน</option>
+            <option value="unpaid">แสดงเฉพาะยังไม่จ่าย</option>
+          </select>
+        </div>
+          <div class="summary-month-picker" id="admin-rsm-months-picker" style="display:none">
+            <div class="summary-month-picker-title">เลือกเดือนที่ต้องการ (สามารถติ๊กหลายเดือนได้)</div>
+            <div class="summary-month-grid" id="admin-rsm-months"></div>
+          </div>
+          <div class="rsm-legend">
+            <span><span class="rsm-swatch rsm-paid"></span>จ่ายครบ</span>
+            <span><span class="rsm-swatch rsm-partial"></span>จ่ายไม่ครบ</span>
+            <span><span class="rsm-swatch rsm-unpaid"></span>ยังไม่จ่าย</span>
+          </div>
+          <div id="admin-rsm-totalbar"></div>
+          <div id="admin-rsm-body"><span class="loading-spinner"></span></div>
+        </div>
       </div>
     </div>
     <div class="section-head"><span class="section-title">ประวัติล่าสุด</span></div>
@@ -845,6 +958,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
       <div id="wc-fees-container" style="margin-top:10px;"></div>
       <button class="btn btn-primary" style="margin-top:12px" onclick="saveWalletConfig()"><i data-lucide="save" class="btn-ico"></i> บันทึกการตั้งค่า</button>
     </div>
+
   </div>
 
   <div class="admin-panel" id="ap-perms">
@@ -975,6 +1089,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
     <div class="modal-body">
       <input type="hidden" id="edit-uid"/>
       <div class="input-group"><label>ชื่อ-นามสกุล</label><input type="text" id="edit-name"/></div>
+      <div class="input-group"><label>เลขที่ / ลำดับ</label><input type="number" id="edit-number" min="1"/></div>
       <div class="input-group"><label>เบอร์โทร</label><input type="text" id="edit-tel"/></div>
       <div class="input-group"><label>ห้องเรียน</label><input type="text" id="edit-room"/></div>
       <div class="input-group"><label>Tag</label><input type="text" id="edit-tag" placeholder="เช่น นักเรียน" maxlength="32"/></div>
@@ -1018,12 +1133,26 @@ let ADMINS={};
 let PAYMENTS={};
 let PERMS={class:false,pay:false,history:false};
 let WALLET_CONFIG={};
+let SUMMARY_CONFIG={showPaidWeeks:true};
+let ROOM_SUMMARY_FILTER='all';
 let CUR_PAGE='login';
 let CUR_PAY_YEAR=null;
 let CUR_PAY_MONTH=null;
 let CUR_PAY_WEEK=null;
 let WALLET_FILTER='all';
 const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const MONTHS_SHORT_TH=['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function getMemberOrderValue(member){
+  const n = parseInt(member?.studentNumber);
+  return Number.isFinite(n) ? n : 1e9;
+}
+function compareMembersByOrder(a,b){
+  const na = getMemberOrderValue(a);
+  const nb = getMemberOrderValue(b);
+  if(na !== nb) return na - nb;
+  return (String(a.name||'')).localeCompare(String(b.name||''), 'th');
+}
 
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxcunvjmqfIqzgoux00ZtupJU-kNrIQNbF_vBFXV3kUelePaKA-esjINi4ZfI0QuDbpEQ/exec";
 
@@ -1210,6 +1339,16 @@ function startListeners(){
     WALLET_CONFIG = snap.val()||{};
     if(CUR_PAGE==='pay') renderPayment();
     if(CUR_PAGE==='admin'){ onAdminMonthChange(); renderWalletConfigEditor(); }
+    renderAdminRoomSummaryPreview();
+    if(document.getElementById('roomSummaryModal')?.classList.contains('open')) renderRoomSummaryModal();
+  });
+
+  // ── SUMMARY CONFIG LISTENER ───────────────────────────────────────
+  onValue(ref(DB,'settings/summaryConfig'), snap=>{
+    SUMMARY_CONFIG = snap.val()||{showPaidWeeks:true};
+    applySummaryConfigUI();
+    renderAdminRoomSummaryPreview();
+    if(document.getElementById('roomSummaryModal')?.classList.contains('open')) renderRoomSummaryModal();
   });
 
   // ── ADMIN ACCOUNTS LISTENER ───────────────────────────────────────
@@ -1289,6 +1428,71 @@ function getAvailableWeeks(year, month){
   const weeks=[];
   for(let i=1;i<=(cfg.weeks||4);i++) weeks.push(i);
   return weeks;
+}
+
+/* ── ROOM SUMMARY HELPERS (สรุปเงินห้อง) ── */
+// รวบรวมเดือนที่มีข้อมูล (ตั้งค่าไว้ หรือมีรายการจ่ายเงินแล้ว) สำหรับปีที่กำหนด ใช้ตอนเลือก "ทุกเดือน"
+function getSummaryMonths(year){
+  const set=new Set();
+  const yKey=String(year);
+  if(WALLET_CONFIG && WALLET_CONFIG[yKey]){
+    Object.keys(WALLET_CONFIG[yKey]).forEach(m=>set.add(parseInt(m)));
+  }
+  Object.values(PAYMENTS).forEach(p=>{
+    if(String(p.year||getCurrentYear())===yKey) set.add(parseInt(p.month));
+  });
+  if(!set.size) set.add(new Date().getMonth()+1);
+  return [...set].sort((a,b)=>a-b);
+}
+
+// สร้างรายการ "คอลัมน์" (แต่ละสัปดาห์ของแต่ละเดือนที่เกี่ยวข้อง) ตามโหมดที่เลือก
+function getSummaryColumns(year, monthSel){
+  const months = monthSel==='all' ? getSummaryMonths(year) : [parseInt(monthSel)];
+  const cols=[];
+  months.forEach(m=>{
+    getAvailableWeeks(year,m).forEach(w=>{
+      cols.push({
+        year, month:m, week:w,
+        fee:getWeekFee(year,m,w),
+        label: monthSel==='all' ? `${MONTHS_SHORT_TH[m]}/${w}` : `ส.${w}`
+      });
+    });
+  });
+  return cols;
+}
+
+// สร้าง map: studentId -> { "y_m_w": ยอดที่จ่ายไปแล้ว }
+function buildSummaryPaidMap(){
+  const map={};
+  Object.values(PAYMENTS).forEach(p=>{
+    const y=String(p.year||getCurrentYear());
+    const key=`${y}_${p.month}_${p.week}`;
+    const sId=String(p.studentId);
+    if(!map[sId]) map[sId]={};
+    map[sId][key]=(map[sId][key]||0)+parseFloat(p.amount||0);
+  });
+  return map;
+}
+
+// เช็คว่าสัปดาห์นี้ทุกคน (ในรายชื่อที่กรองแล้ว) จ่ายครบหรือยัง
+function isColumnFullyPaid(col, mbs, paidMap){
+  if(!mbs.length) return true;
+  const key=`${col.year}_${col.month}_${col.week}`;
+  return mbs.every(m=>{
+    const amt=(paidMap[String(m.studentId)]||{})[key]||0;
+    return amt>=col.fee;
+  });
+}
+
+// รวมยอดที่ "ยังไม่จ่าย" ของนักเรียนคนหนึ่ง ตลอดคอลัมน์ทั้งหมดในขอบเขตที่เลือก (ไม่ขึ้นกับว่าซ่อนบางสัปดาห์อยู่หรือไม่)
+function computeStudentOutstanding(m, cols, paidMap){
+  let total=0;
+  cols.forEach(col=>{
+    const key=`${col.year}_${col.month}_${col.week}`;
+    const amt=(paidMap[String(m.studentId)]||{})[key]||0;
+    if(amt<col.fee) total+=(col.fee-amt);
+  });
+  return total;
 }
 
 /* ── ROOM FILTER HELPERS ── */
@@ -1716,7 +1920,7 @@ function renderClassmates(){
 
   const q=(document.getElementById('classSearch')?.value||'').toLowerCase();
   const roomFilter=document.getElementById('classFilterRoom')?.value||'';
-  const sortMode=document.getElementById('classSort')?.value||'name_asc';
+  const sortMode=document.getElementById('classSort')?.value||'number_asc';
 
   let arr=Object.entries(MEMBERS);
 
@@ -1729,6 +1933,7 @@ function renderClassmates(){
   arr.sort((a,b)=>{
     const[,ma]=a,[,mb]=b;
     switch(sortMode){
+      case 'number_asc': return compareMembersByOrder(ma, mb);
       case 'name_asc': return (ma.name||'').localeCompare(mb.name||'', 'th');
       case 'name_desc': return (mb.name||'').localeCompare(ma.name||'', 'th');
       case 'score_desc': return (parseInt(mb.scores?.total||0))-(parseInt(ma.scores?.total||0));
@@ -1737,7 +1942,7 @@ function renderClassmates(){
         const roleOrder={admin:0,student:1,guest:2};
         return (roleOrder[ma.role]||99)-(roleOrder[mb.role]||99);
       }
-      default: return 0;
+      default: return compareMembersByOrder(ma, mb);
     }
   });
 
@@ -1746,7 +1951,17 @@ function renderClassmates(){
 
   if(!arr.length){document.getElementById('class-list').innerHTML='<div class="empty-state">ยังไม่มีข้อมูลสมาชิก<br>Admin ต้องเพิ่มรายชื่อก่อน</div>';return;}
 
-  document.getElementById('class-list').innerHTML=arr.map(([uid,m])=>`<div class="student-item" onclick="openStudentModal('${uid}')"><div class="student-avatar">${avatarEmoji(m)}</div><div class="student-info"><div class="student-name">${m.name||'—'}${'<span class="name-tag"> -- '+(m.tag||'นักเรียน')+'</span>'}</div><div class="student-meta">รหัส ${m.studentId||'—'}${m.classroom?' · ม.'+m.classroom:''} · ${m.tel||'—'}</div><div style="margin-top:4px">${roleBadge(m.role,'sm')}</div></div>${m.scores?.good?`<div class="student-score">${m.scores.good}</div>`:''}</div>`).join('');
+  document.getElementById('class-list').innerHTML=arr.map(([uid,m])=>{
+    const scores = m.scores || {};
+    const scoreHtml = (scores.good || scores.bad || scores.total)
+      ? `<div class="student-score" style="display:flex;flex-direction:column;gap:4px;min-width:80px;text-align:right;">` +
+          `${scores.good != null ? `<span style="color:var(--green);font-weight:700">${scores.good}</span>` : ''}` +
+          `${scores.bad != null ? `<span style="color:var(--red);font-weight:700">${scores.bad}</span>` : ''}` +
+          `${scores.total != null ? `<span style="color:var(--purple);font-weight:700">${scores.total}</span>` : ''}` +
+        `</div>`
+      : '';
+    return `<div class="student-item" onclick="openStudentModal('${uid}')"><div class="student-avatar">${avatarEmoji(m)}</div><div class="student-info"><div class="student-name">${m.name||'—'}${'<span class="name-tag"> -- '+(m.tag||'นักเรียน')+'</span>'}</div><div class="student-meta">${m.studentNumber!=null?`เลขที่ ${m.studentNumber} · `:''}รหัส ${m.studentId||'—'}${m.classroom?' · ม.'+m.classroom:''} · ${m.tel||'—'}</div><div style="margin-top:4px">${roleBadge(m.role,'sm')}</div></div>${scoreHtml}</div>`;
+  }).join('');
 }
 
 function openStudentModal(uid){
@@ -1852,7 +2067,7 @@ function renderPayTable(){
     }
   });
 
-  let mbs=Object.values(MEMBERS);
+  let mbs=Object.values(MEMBERS).sort(compareMembersByOrder);
   if(roomFilter) mbs=mbs.filter(m=>String(m.classroom||'')===roomFilter);
 
   let paidCount = 0;
@@ -1914,7 +2129,7 @@ function renderPayTable(){
           <div class="student-avatar" style="width:36px;height:36px;font-size:18px;flex-shrink:0">${avatarEmoji(m)}</div>
           <div class="pay-name">
             ${m.name||'—'}
-            <div style="font-size:11px; font-weight:400; color:var(--text2); margin-top:2px;">รหัส ${m.studentId}${m.classroom?' · ม.'+m.classroom:''}</div>
+            <div style="font-size:11px; font-weight:400; color:var(--text2); margin-top:2px;">${m.studentNumber!=null?`เลขที่ ${m.studentNumber} · `:''}รหัส ${m.studentId}${m.classroom?' · ม.'+m.classroom:''}</div>
           </div>
           <div class="pay-status ${statusClass}">${statusText}</div>
         </div>
@@ -1977,9 +2192,13 @@ async function addMember(){
   const room=document.getElementById('am-room').value.trim();
   const role=document.getElementById('am-role').value;
   if(!sid||!name){alert('กรุณากรอกรหัสและชื่อ');return;}
+  const rawNumber=(document.getElementById('am-number')?.value||'').trim();
+  const studentNumber = rawNumber === '' ? null : parseInt(rawNumber,10);
+  const payload={studentId:sid,name,tel,role,classroom:room||'4/2',tag:'นักเรียน',createdAt:Date.now()};
+  if(studentNumber !== null && !Number.isNaN(studentNumber)) payload.studentNumber = studentNumber;
   const{ref,push,set}=FUNS;
-  await set(push(ref(DB,'members')),{studentId:sid,name,tel,role,classroom:room||'4/2',tag:'นักเรียน',createdAt:Date.now()});
-  ['am-id','am-name','am-tel','am-room'].forEach(id=>document.getElementById(id).value='');
+  await set(push(ref(DB,'members')), payload);
+  ['am-id','am-number','am-name','am-tel','am-room'].forEach(id=>document.getElementById(id).value='');
 }
 
 function renderMemberAdmin(){
@@ -1995,6 +2214,8 @@ function renderMemberAdmin(){
   if(rRoom) arr=arr.filter(([,m])=>String(m.classroom||'')===rRoom);
   if(rRole) arr=arr.filter(([,m])=>(m.role||'student')===rRole);
 
+  arr.sort((a,b)=>compareMembersByOrder(a[1], b[1]));
+
   if(!arr.length){list.innerHTML='<div class="empty-state">ไม่พบสมาชิกตามเงื่อนไข</div>';return;}
 
   list.innerHTML=arr.map(([uid,m])=>`
@@ -2002,7 +2223,7 @@ function renderMemberAdmin(){
       <div class="student-avatar" style="width:40px;height:40px;font-size:20px">${avatarEmoji(m)}</div>
       <div class="member-info">
         <div class="member-name">${m.name||'—'}${'<span class="name-tag"> -- '+(m.tag||'นักเรียน')+'</span>'}</div>
-        <div class="student-meta">รหัส ${m.studentId||'—'}${m.classroom?(' · ม.'+m.classroom):''} · ${m.tel||'—'}</div>
+        <div class="student-meta">${m.studentNumber!=null?`เลขที่ ${m.studentNumber} · `:''}รหัส ${m.studentId||'—'}${m.classroom?(' · ม.'+m.classroom):''} · ${m.tel||'—'}</div>
         <div style="margin-top:4px">${roleBadge(m.role,'sm')}</div>
       </div>
       <div class="member-actions">
@@ -2140,7 +2361,7 @@ function preparePaymentDropdown() {
   });
 
   // กรองเฉพาะนักเรียนที่ยังไม่จ่ายหรือค้างจ่าย
-  let arr = Object.values(MEMBERS).sort((a,b) => (a.studentId||'').localeCompare(b.studentId||''));
+  let arr = Object.values(MEMBERS).sort(compareMembersByOrder);
   arr = arr.filter(m => {
     const paid = paidMap[String(m.studentId)] || 0;
     return paid < targetFee;
@@ -2151,7 +2372,7 @@ function preparePaymentDropdown() {
     arr.map(m => {
       const paid = paidMap[String(m.studentId)] || 0;
       const statusTag = paid > 0 ? ` ⚠ ค้างจ่าย ${paid}/${targetFee}฿` : ` ✗ ยังไม่จ่าย`;
-      return `<option value="${m.studentId}">${m.studentId} - ${m.name}${statusTag}</option>`;
+      return `<option value="${m.studentId}">${m.studentNumber!=null?`[${m.studentNumber}] `:''}${m.studentId} - ${m.name}${statusTag}</option>`;
     }).join('');
 
   // คืนค่าที่เลือกไว้ (ถ้ายังมีอยู่)
@@ -2203,6 +2424,7 @@ function openEditModal(uid){
   const m=MEMBERS[uid];if(!m)return;
   document.getElementById('edit-uid').value=uid;
   document.getElementById('edit-name').value=m.name||'';
+  document.getElementById('edit-number').value=m.studentNumber != null ? m.studentNumber : '';
   document.getElementById('edit-tel').value=m.tel||'';
   document.getElementById('edit-room').value=m.classroom||'';
   document.getElementById('edit-avatar').value = m.avatar||'';
@@ -2215,6 +2437,8 @@ async function saveMemberEdit(){
   if(!DB)return;
   const uid=document.getElementById('edit-uid').value;
   const{ref,update}=FUNS;
+  const rawNumber=(document.getElementById('edit-number')?.value||'').trim();
+  const studentNumber = rawNumber === '' ? null : parseInt(rawNumber,10);
   const payload = {
     name: document.getElementById('edit-name').value.trim(),
     tel: document.getElementById('edit-tel').value.trim(),
@@ -2222,6 +2446,8 @@ async function saveMemberEdit(){
     role: document.getElementById('edit-role').value,
     avatar: (document.getElementById('edit-avatar')?.value||'').trim() || null
   };
+  if(studentNumber !== null && !Number.isNaN(studentNumber)) payload.studentNumber = studentNumber;
+  else payload.studentNumber = null;
   // Only admins may edit tag
   if(SESSION?.role === 'admin'){
     const t = (document.getElementById('edit-tag')?.value||'').trim();
@@ -2414,7 +2640,7 @@ function setLoanDue(days){
 function prepareLoanDropdown(){
   const dd=document.getElementById('loan-sid-dropdown');
   if(!dd||dd.dataset.ready)return;
-  const members=Object.values(MEMBERS).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  const members=Object.values(MEMBERS).sort(compareMembersByOrder);
   dd.innerHTML='<option value="">-- กดเพื่อเลือกรายชื่อ --</option>'+
     members.map(m=>`<option value="${escapeHtml(String(m.studentId))}">${escapeHtml(m.name||m.studentId)} (${m.studentId})</option>`).join('');
   dd.dataset.ready='1';
@@ -2561,6 +2787,166 @@ function renderLoanHistoryModal(){
     }).join('');
 }
 
+/* ── ROOM SUMMARY MODAL (สรุปเงินห้อง) ── */
+function applySummaryConfigUI(){
+  const el=document.getElementById('cfg-summary-show-paid');
+  if(el) el.checked = SUMMARY_CONFIG.showPaidWeeks !== false;
+  renderAdminRoomSummaryPreview();
+}
+
+async function saveSummaryConfig(){
+  if(!DB||SESSION?.role!=='admin')return;
+  const{ref,set}=FUNS;
+  SUMMARY_CONFIG={showPaidWeeks:document.getElementById('cfg-summary-show-paid').checked};
+  await set(ref(DB,'settings/summaryConfig'),SUMMARY_CONFIG);
+}
+
+function openRoomSummaryModal(){
+  openModal('roomSummaryModal');
+  renderRoomSummaryModal();
+}
+
+function summaryCellHtml(amt, fee){
+  if(fee>0 && amt>=fee) return `<td class="rsm-cell rsm-paid" title="จ่ายครบ ${amt.toLocaleString('th-TH')}/${fee}฿">${svgIco('check')}</td>`;
+  if(amt>0) return `<td class="rsm-cell rsm-partial" title="จ่ายบางส่วน ${amt.toLocaleString('th-TH')}/${fee}฿">${amt.toLocaleString('th-TH')}</td>`;
+  return `<td class="rsm-cell rsm-unpaid" title="ยังไม่จ่าย 0/${fee}฿">–</td>`;
+}
+
+function renderAdminRoomSummaryMonthOptions(){
+  const list=document.getElementById('admin-rsm-months');
+  const picker=document.getElementById('admin-rsm-months-picker');
+  const monthSel=document.getElementById('admin-rsm-month')?.value||'all';
+  if(picker) picker.style.display = monthSel==='all' ? 'block' : 'none';
+  if(!list) return;
+  const selected = new Set(Array.from(document.querySelectorAll('#admin-rsm-months input:checked')).map(i=>parseInt(i.value,10)));
+  if(!selected.size){ MONTHS.forEach((_,idx)=>selected.add(idx+1)); }
+  list.innerHTML=MONTHS.map((m,idx)=>{
+    const monthNum=idx+1;
+    const checked=selected.has(monthNum)?'checked':'';
+    return `<label class="summary-month-item"><input type="checkbox" value="${monthNum}" ${checked} onchange="renderAdminRoomSummaryPreview()"> ${m}</label>`;
+  }).join('');
+}
+
+function getAdminRoomSummaryMonths(year){
+  const monthSel=document.getElementById('admin-rsm-month')?.value||'all';
+  const checkedMonths=Array.from(document.querySelectorAll('#admin-rsm-months input:checked')).map(i=>parseInt(i.value,10));
+  if(checkedMonths.length){
+    return [...new Set(checkedMonths)].sort((a,b)=>a-b);
+  }
+  return monthSel==='all' ? getSummaryMonths(year) : [parseInt(monthSel)];
+}
+
+function normalizeSummaryMonths(year, months){
+  if(Array.isArray(months)){
+    return [...new Set(months.filter(m=>!Number.isNaN(parseInt(m,10))).map(m=>parseInt(m,10)))].sort((a,b)=>a-b);
+  }
+  if(months===null || months===undefined || months==='' || months==='all'){
+    return getSummaryMonths(year);
+  }
+  const parsed=parseInt(months,10);
+  return Number.isNaN(parsed) ? [] : [parsed];
+}
+
+function getSummaryColumnsForMonths(year, months){
+  const cols=[];
+  const resolvedMonths=normalizeSummaryMonths(year, months);
+  resolvedMonths.forEach(m=>{
+    getAvailableWeeks(year,m).forEach(w=>{
+      cols.push({year, month:m, week:w, fee:getWeekFee(year,m,w), label:`${MONTHS_SHORT_TH[m]}/${w}`});
+    });
+  });
+  return cols;
+}
+
+function renderAdminRoomSummaryPreview(){
+  const el=document.getElementById('admin-rsm-body');
+  const barEl=document.getElementById('admin-rsm-totalbar');
+  if(!el) return;
+
+  renderAdminRoomSummaryMonthOptions();
+
+  const year=getCurrentYear();
+  const roomFilter=document.getElementById('admin-rsm-room')?.value||'';
+  const viewMode=document.getElementById('admin-rsm-view')?.value||'all';
+  const selectedMonths=getAdminRoomSummaryMonths(year);
+
+  renderRoomSummaryContent(el, barEl, year, selectedMonths, roomFilter, viewMode);
+}
+
+function renderRoomSummaryContent(el, barEl, year, months, roomFilter, viewMode){
+  if(!el)return;
+
+  let mbs=Object.values(MEMBERS).sort(compareMembersByOrder);
+  if(roomFilter) mbs=mbs.filter(m=>String(m.classroom||'')===roomFilter);
+
+  const resolvedMonths=normalizeSummaryMonths(year, months);
+  const cols=getSummaryColumnsForMonths(year, resolvedMonths);
+  const paidMap=buildSummaryPaidMap();
+  const showPaid = SUMMARY_CONFIG.showPaidWeeks !== false;
+  const visibleMbs = viewMode==='unpaid'
+    ? mbs.filter(m=>computeStudentOutstanding(m, cols, paidMap) > 0)
+    : mbs;
+
+  if(!visibleMbs.length){
+    if(barEl)barEl.innerHTML='';
+    el.innerHTML=`<div class="empty-state">${viewMode==='unpaid' ? 'ไม่มีนักเรียนที่ยังค้างจ่ายในช่วงที่เลือก' : 'ยังไม่มีสมาชิก'}</div>`;
+    return;
+  }
+  if(!cols.length){
+    if(barEl)barEl.innerHTML='';
+    el.innerHTML='<div class="empty-state">ยังไม่มีการตั้งค่าเงินห้องสำหรับช่วงที่เลือก</div>';
+    return;
+  }
+
+  const visibleCols = showPaid ? cols : cols.filter(c=>!isColumnFullyPaid(c, visibleMbs, paidMap));
+  const totalOutstanding = visibleMbs.reduce((s,m)=>s+computeStudentOutstanding(m, cols, paidMap),0);
+  const scopeLabel = resolvedMonths.length===1 ? `${MONTHS[resolvedMonths[0]-1]} ${year}` : (resolvedMonths.length===12 ? `ทุกเดือน ${year}` : `เดือนที่เลือก ${resolvedMonths.length} เดือน ${year}`) + ' · ' + visibleMbs.length + ' คน';
+  if(barEl){
+    barEl.innerHTML = `<div class="rsm-totalbar">
+      <span class="rsm-scope">${scopeLabel}${viewMode==='unpaid' ? ' · แสดงเฉพาะที่ยังไม่จ่าย' : ''}</span>
+      <span class="rsm-total-val" style="color:${totalOutstanding>0?'var(--red)':'var(--green)'}">${totalOutstanding>0? 'ค้างจ่ายรวม '+totalOutstanding.toLocaleString('th-TH')+'฿' : '✅ จ่ายครบทุกคน'}</span>
+    </div>`;
+  }
+
+  if(!visibleCols.length){
+    el.innerHTML='<div class="empty-state">✅ ทุกคนในกลุ่มที่เลือกจ่ายครบทุกสัปดาห์แล้ว</div>';
+    return;
+  }
+
+  let thead='<tr><th class="rsm-th-name">ชื่อ</th>';
+  visibleCols.forEach(c=>{ thead+=`<th class="rsm-th-week">${c.label}<div class="rsm-fee">${c.fee}฿</div></th>`; });
+  thead+='<th class="rsm-th-total">ค้างจ่าย</th></tr>';
+
+  let rows='';
+  visibleMbs.forEach(m=>{
+    const outstanding=computeStudentOutstanding(m, cols, paidMap);
+    rows+=`<tr><td class="rsm-td-name">${escapeHtml(m.name||m.studentId||'—')}</td>`;
+    visibleCols.forEach(c=>{
+      const key=`${c.year}_${c.month}_${c.week}`;
+      const amt=(paidMap[String(m.studentId)]||{})[key]||0;
+      rows+=summaryCellHtml(amt, c.fee);
+    });
+    rows+=`<td class="rsm-td-total ${outstanding>0?'rsm-owe':'rsm-clear'}">${outstanding>0?outstanding.toLocaleString('th-TH')+'฿':'✓'}</td></tr>`;
+  });
+
+  el.innerHTML=`<div class="rsm-table-wrap"><table class="rsm-table"><thead>${thead}</thead><tbody>${rows}</tbody></table></div>`;
+  try{ if(window.lucide && typeof window.lucide.replace==='function') window.lucide.replace(); }catch(e){}
+}
+
+function renderRoomSummaryModal(){
+  const el=document.getElementById('rsm-body');
+  const barEl=document.getElementById('rsm-totalbar');
+  if(!el)return;
+
+  const year=getCurrentYear();
+  const monthSel=document.getElementById('rsm-month')?.value||String(new Date().getMonth()+1);
+  const roomFilter=document.getElementById('rsm-room')?.value||'';
+  const viewMode=document.getElementById('rsm-view')?.value||ROOM_SUMMARY_FILTER||'all';
+  ROOM_SUMMARY_FILTER=viewMode;
+
+  renderRoomSummaryContent(el, barEl, year, monthSel, roomFilter, viewMode);
+}
+
 function renderPayHistoryAdmin(){
   const el=document.getElementById('pay-history-admin');if(!el)return;
   const arr=Object.entries(PAYMENTS).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
@@ -2668,9 +3054,9 @@ function getAutoFillPlan(sid, totalAmount) {
 function prepareAutoFillDropdown(){
   const dd = document.getElementById('af-sid-dropdown');
   if(!dd || dd.dataset.ready) return;
-  const members = Object.values(MEMBERS).sort((a,b)=>(a.name||'').localeCompare(b.name||'','th'));
+  const members = Object.values(MEMBERS).sort(compareMembersByOrder);
   dd.innerHTML = '<option value="">-- กดเพื่อเลือกรายชื่อ --</option>' +
-    members.map(m=>`<option value="${escapeHtml(String(m.studentId))}">${escapeHtml(m.name||m.studentId)} (${m.studentId})</option>`).join('');
+    members.map(m=>`<option value="${escapeHtml(String(m.studentId))}">${escapeHtml(m.studentNumber!=null?`[${m.studentNumber}] `:'')}${escapeHtml(m.name||m.studentId)} (${m.studentId})</option>`).join('');
   dd.dataset.ready = '1';
 }
 
@@ -2816,6 +3202,93 @@ function goPage(pg){
   if(pg==='class')renderClassmates();
   if(pg==='pay')renderPayment();
   if(pg==='admin'){renderMemberAdmin();renderPayHistoryAdmin();onAdminMonthChange();renderWalletConfigEditor();}
+}
+
+async function exportRoomSummaryImage(targetId, fileName){
+  const target=document.getElementById(targetId);
+  if(!target){ alert('ไม่พบพื้นที่สรุปเงินห้องสำหรับส่งออก'); return; }
+  const sourceWrap=target.querySelector('.rsm-table-wrap') || target.querySelector('table');
+  const btn=document.querySelector(`.room-summary-export-btn[onclick*="${targetId}"]`);
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> กำลังสร้างรูป...'; }
+
+  let clone=null;
+  try{
+    if(!sourceWrap) throw new Error('ไม่พบตารางสรุปเงินห้อง');
+    clone=sourceWrap.cloneNode(true);
+    clone.style.position='absolute';
+    clone.style.left='-99999px';
+    clone.style.top='0';
+    clone.style.width='max-content';
+    clone.style.maxWidth='none';
+    clone.style.maxHeight='none';
+    clone.style.height='auto';
+    clone.style.overflow='visible';
+    clone.style.opacity='1';
+    clone.style.visibility='visible';
+    clone.style.pointerEvents='none';
+    clone.style.zIndex='2147483647';
+    clone.style.background='var(--bg2)';
+    clone.style.color='var(--text)';
+    clone.style.borderCollapse='collapse';
+    clone.style.margin='0';
+    clone.style.padding='0';
+    clone.style.display='inline-block';
+    if(clone.classList.contains('rsm-table-wrap')){
+      clone.style.minWidth='max-content';
+    }
+    const table=clone.querySelector('.rsm-table');
+    if(table){
+      table.style.tableLayout='auto';
+      table.style.width='max-content';
+      table.style.minWidth='max-content';
+      table.style.margin='0';
+      table.style.padding='0';
+    }
+    const cells=clone.querySelectorAll('.rsm-th-name, .rsm-td-name, .rsm-th-total, .rsm-td-total, .rsm-table th, .rsm-table td');
+    cells.forEach(cell=>{
+      cell.style.position='static';
+      cell.style.left='auto';
+      cell.style.whiteSpace='nowrap';
+    });
+    const nameCells=clone.querySelectorAll('.rsm-th-name, .rsm-td-name');
+    nameCells.forEach(cell=>{
+      cell.style.width='220px';
+      cell.style.minWidth='220px';
+      cell.style.maxWidth='220px';
+      cell.style.paddingLeft='12px';
+      cell.style.paddingRight='14px';
+      cell.style.borderRight='2px solid rgba(255,255,255,0.08)';
+    });
+    const totalCells=clone.querySelectorAll('.rsm-th-total, .rsm-td-total');
+    totalCells.forEach(cell=>{
+      cell.style.width='92px';
+      cell.style.minWidth='92px';
+      cell.style.maxWidth='92px';
+      cell.style.paddingLeft='10px';
+      cell.style.paddingRight='10px';
+    });
+    document.body.appendChild(clone);
+
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+
+    const canvas=await html2canvas(clone,{backgroundColor:'#030712',scale:1.8,useCORS:true,logging:false,width:clone.scrollWidth, height:clone.scrollHeight, windowWidth:clone.scrollWidth, windowHeight:clone.scrollHeight});
+    const link=document.createElement('a');
+    link.download=`${fileName}-${new Date().toISOString().slice(0,10)}.png`;
+    link.href=canvas.toDataURL('image/png');
+    link.click();
+  }catch(e){
+    console.error(e);
+    alert('ไม่สามารถสร้างภาพสรุปเงินห้องได้ในขณะนี้');
+  }finally{
+    if(clone && clone.parentNode) clone.remove();
+    if(btn){
+      setTimeout(()=>{
+        btn.disabled=false;
+        btn.innerHTML='<i data-lucide="image" class="btn-ico"></i> ส่งออก PNG';
+        ensureLucideIcons(btn);
+      },120);
+    }
+  }
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
@@ -3211,6 +3684,8 @@ async function runDbCommand(){
   if(s) s.value=new Date().getMonth()+1;
   const wc=document.getElementById('wc-month');
   if(wc) wc.value=new Date().getMonth()+1;
+  const rsm=document.getElementById('rsm-month');
+  if(rsm) rsm.value=new Date().getMonth()+1;
 })();
 
 // Ensure lucide icons are rendered after initial load and after dynamic updates
@@ -3271,6 +3746,44 @@ ensureLucideIcons();
       <button class="modal-close" onclick="closeModal('loanHistoryModal')"><i data-lucide="x" class="modal-close-ico"></i></button>
     </div>
     <div class="modal-body" id="lhm-body"><span class="loading-spinner"></span></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="roomSummaryModal" onclick="closeModal('roomSummaryModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title">📊 สรุปเงินห้อง</span>
+      <button class="modal-close" onclick="closeModal('roomSummaryModal')"><i data-lucide="x" class="modal-close-ico"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="room-summary-export-shell" id="room-summary-export-shell">
+        <div class="room-summary-controls">
+        <select id="rsm-month" class="wallet-select" onchange="renderRoomSummaryModal()">
+          <option value="all">ทุกเดือน</option>
+          <option value="1">มกราคม</option><option value="2">กุมภาพันธ์</option>
+          <option value="3">มีนาคม</option><option value="4">เมษายน</option>
+          <option value="5">พฤษภาคม</option><option value="6">มิถุนายน</option>
+          <option value="7">กรกฎาคม</option><option value="8">สิงหาคม</option>
+          <option value="9">กันยายน</option><option value="10">ตุลาคม</option>
+          <option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+        </select>
+        <select id="rsm-room" class="wallet-select" onmousedown="prepareRoomFilter(this.id)" onchange="renderRoomSummaryModal()">
+          <option value="">ทุกห้อง</option>
+        </select>
+        <select id="rsm-view" class="wallet-select" onchange="renderRoomSummaryModal()">
+          <option value="all">แสดงทุกคน</option>
+          <option value="unpaid">แสดงเฉพาะยังไม่จ่าย</option>
+        </select>
+      </div>
+        <div class="rsm-legend">
+          <span><span class="rsm-swatch rsm-paid"></span>จ่ายครบ</span>
+          <span><span class="rsm-swatch rsm-partial"></span>จ่ายไม่ครบ</span>
+          <span><span class="rsm-swatch rsm-unpaid"></span>ยังไม่จ่าย</span>
+        </div>
+        <div id="rsm-totalbar"></div>
+        <div id="rsm-body"><span class="loading-spinner"></span></div>
+      </div>
+    </div>
   </div>
 </div>
 
