@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>4/2 · คำชะอีวิทยาคาร</title>
+<title>4/2</title>
+
+<!-- ── PWA: เพิ่มไปหน้าจอหลักได้ทั้ง Android/iOS ── -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" id="themeColorMeta" content="#030712"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<!-- iOS Safari ไม่อ่าน manifest.json สำหรับโหมด/ไอคอนตอนเพิ่มหน้าจอหลัก ต้องใช้ meta tag ชุดนี้แทน -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="apple-mobile-web-app-title" content="4/2 Hub"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
@@ -12,6 +25,12 @@
   window.addEventListener('DOMContentLoaded', function(){
     try{ if(window.lucide && typeof window.lucide.replace === 'function') window.lucide.replace(); }catch(e){}
   });
+  // ลงทะเบียน service worker (สำหรับให้เบราว์เซอร์นับเป็นแอปที่ติดตั้งได้เท่านั้น ไม่ได้แคชข้อมูลใดๆ)
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    });
+  }
 </script>
 <script src="API_KEY.js"></script>
 <!-- Firebase CDN -->
@@ -332,9 +351,21 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;bac
 .rsm-owe{color:var(--red)}
 .rsm-clear{color:var(--green)}
 #roomSummaryModal .modal{max-width:min(1120px,calc(100vw - 24px));max-height:min(92vh,860px);display:flex;flex-direction:column;width:min(1120px,calc(100vw - 24px))}
-#roomSummaryModal .modal-body{display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:16px 16px 20px}
-#roomSummaryModal .rsm-table-wrap{flex:1 1 auto;min-height:0}
-@media(max-width:640px){.room-summary-controls{grid-template-columns:1fr}.rsm-totalbar{flex-direction:column;align-items:flex-start}.rsm-table{font-size:11px}.rsm-table th,.rsm-table td{padding:6px 6px}.rsm-th-name,.rsm-td-name{min-width:96px;max-width:116px}.rsm-cell{width:36px;font-size:11px}#roomSummaryModal .modal-body{padding:12px 12px 16px}}
+#roomSummaryModal .modal-body{display:flex;flex-direction:column;gap:10px;overflow:hidden;padding:16px 16px 20px;min-height:0}
+/* เชื่อม flex ทุกชั้นจาก modal-body ลงไปถึงตัวตาราง (เดิม .rsm-table-wrap อยู่ลึกเกิน 2 ชั้นจาก modal-body
+   ทำให้ flex:1 ที่ตั้งไว้ไม่มีผลจริง ส่วนที่สูงเกินพื้นที่จะถูกซ่อนเงียบๆ โดย overflow:hidden ของ modal-body)
+   ตอนนี้ตัวกรอง/legend/สรุปยอด จะปักหมุดอยู่กับที่เสมอ ส่วนตารางจะขยายเต็มพื้นที่ที่เหลือแล้วสกอลล์ในตัวเอง
+   ทำให้เห็นครบทั้งแถวและคอลัมน์แน่นอน ไม่ว่าจอมือถือจะสูงแค่ไหน */
+#roomSummaryModal .room-summary-export-shell{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden}
+#roomSummaryModal .room-summary-controls{flex-shrink:0}
+#roomSummaryModal .rsm-legend{flex-shrink:0}
+#roomSummaryModal .rsm-scroll-hint{flex-shrink:0}
+#roomSummaryModal #rsm-totalbar{flex-shrink:0}
+#roomSummaryModal #rsm-body{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
+#roomSummaryModal #rsm-body .empty-state{margin:auto}
+#roomSummaryModal .rsm-table-wrap{flex:1 1 auto;min-height:0;max-height:none}
+.rsm-scroll-hint{display:none;align-items:center;gap:6px;font-size:11px;color:var(--text2)}
+@media(max-width:640px){.room-summary-controls{grid-template-columns:1fr}.rsm-totalbar{flex-direction:column;align-items:flex-start}.rsm-table{font-size:11px}.rsm-table th,.rsm-table td{padding:6px 6px}.rsm-th-name,.rsm-td-name{min-width:96px;max-width:116px}.rsm-cell{width:36px;font-size:11px}#roomSummaryModal .modal-body{padding:12px 12px 16px}.rsm-scroll-hint{display:flex}}
 @media(min-width:900px){#roomSummaryModal .modal{max-width:min(1120px,calc(100vw - 24px))}#roomSummaryModal .modal-body{padding:20px 22px}}
 
 /* ── REPORT TABLE (รายงานความดี / ประพฤติ) ── */
@@ -2818,6 +2849,8 @@ function renderAdminRoomSummaryMonthOptions(){
   const monthSel=document.getElementById('admin-rsm-month')?.value||'all';
   if(picker) picker.style.display = monthSel==='all' ? 'block' : 'none';
   if(!list) return;
+  // เลือกเดือนเดียวแบบเจาะจงอยู่ (ไม่ใช่ "ทุกเดือน") ไม่ต้องยุ่งกับ checkbox grid เลย เพราะไม่ได้ใช้ในโหมดนี้
+  if(monthSel!=='all') return;
   const selected = new Set(Array.from(document.querySelectorAll('#admin-rsm-months input:checked')).map(i=>parseInt(i.value,10)));
   if(!selected.size){ MONTHS.forEach((_,idx)=>selected.add(idx+1)); }
   list.innerHTML=MONTHS.map((m,idx)=>{
@@ -2829,11 +2862,17 @@ function renderAdminRoomSummaryMonthOptions(){
 
 function getAdminRoomSummaryMonths(year){
   const monthSel=document.getElementById('admin-rsm-month')?.value||'all';
+  // เลือกเดือนเดียวแบบเจาะจงอยู่ → ใช้เดือนนั้นตรงๆ เลย ไม่ต้องสนใจ checkbox grid ที่ซ่อนอยู่
+  // (เดิมโค้ดเช็ค checkbox ก่อนเสมอ ซึ่ง checkbox ถูกติ๊กครบ 12 เดือนไว้เป็นค่าเริ่มต้นเงียบๆ อยู่แล้ว
+  //  ทำให้เลือกเดือนไหนก็ตาม กลับไปแสดงทุกเดือนอยู่ดี)
+  if(monthSel!=='all'){
+    return [parseInt(monthSel)];
+  }
   const checkedMonths=Array.from(document.querySelectorAll('#admin-rsm-months input:checked')).map(i=>parseInt(i.value,10));
   if(checkedMonths.length){
     return [...new Set(checkedMonths)].sort((a,b)=>a-b);
   }
-  return monthSel==='all' ? getSummaryMonths(year) : [parseInt(monthSel)];
+  return getSummaryMonths(year);
 }
 
 function normalizeSummaryMonths(year, months){
@@ -2856,6 +2895,26 @@ function getSummaryColumnsForMonths(year, months){
     });
   });
   return cols;
+}
+
+// สร้างข้อความบอก "เดือนไหนบ้าง" ที่รวมอยู่ในสรุปนี้ ใช้แทนการโชว์แค่จำนวนเดือนเฉยๆ
+// - 1 เดือน       → ชื่อเต็ม เช่น "พฤษภาคม 2569"
+// - ครบ 12 เดือน  → "ทุกเดือน 2569" (ยังกระชับ ไม่ต้องแจกแจงทุกเดือน)
+// - เดือนต่อเนื่องกัน (≥3 เดือน) → แสดงเป็นช่วง เช่น "มี.ค.-พ.ค. 2569"
+// - เดือนไม่ต่อเนื่อง/2 เดือน   → แจกแจงชื่อย่อทีละเดือน เช่น "มี.ค., พ.ค., ส.ค. 2569"
+function formatMonthScopeLabel(months, year){
+  const sorted=[...new Set((months||[]).map(m=>parseInt(m,10)).filter(m=>!Number.isNaN(m)))].sort((a,b)=>a-b);
+  if(!sorted.length) return `ปี ${year}`;
+  if(sorted.length===1) return `${MONTHS[sorted[0]-1]} ${year}`;
+  if(sorted.length===12 && sorted[0]===1 && sorted[11]===12) return `ทุกเดือน ${year}`;
+  let consecutive=true;
+  for(let i=1;i<sorted.length;i++){
+    if(sorted[i]!==sorted[i-1]+1){ consecutive=false; break; }
+  }
+  if(consecutive && sorted.length>=3){
+    return `${MONTHS_SHORT_TH[sorted[0]]}-${MONTHS_SHORT_TH[sorted[sorted.length-1]]} ${year}`;
+  }
+  return sorted.map(m=>MONTHS_SHORT_TH[m]).join(', ')+` ${year}`;
 }
 
 function renderAdminRoomSummaryPreview(){
@@ -2900,7 +2959,7 @@ function renderRoomSummaryContent(el, barEl, year, months, roomFilter, viewMode)
 
   const visibleCols = showPaid ? cols : cols.filter(c=>!isColumnFullyPaid(c, visibleMbs, paidMap));
   const totalOutstanding = visibleMbs.reduce((s,m)=>s+computeStudentOutstanding(m, cols, paidMap),0);
-  const scopeLabel = resolvedMonths.length===1 ? `${MONTHS[resolvedMonths[0]-1]} ${year}` : (resolvedMonths.length===12 ? `ทุกเดือน ${year}` : `เดือนที่เลือก ${resolvedMonths.length} เดือน ${year}`) + ' · ' + visibleMbs.length + ' คน';
+  const scopeLabel = formatMonthScopeLabel(resolvedMonths, year) + ' · ' + visibleMbs.length + ' คน';
   if(barEl){
     barEl.innerHTML = `<div class="rsm-totalbar">
       <span class="rsm-scope">${scopeLabel}${viewMode==='unpaid' ? ' · แสดงเฉพาะที่ยังไม่จ่าย' : ''}</span>
@@ -3207,49 +3266,66 @@ function goPage(pg){
 async function exportRoomSummaryImage(targetId, fileName){
   const target=document.getElementById(targetId);
   if(!target){ alert('ไม่พบพื้นที่สรุปเงินห้องสำหรับส่งออก'); return; }
-  const sourceWrap=target.querySelector('.rsm-table-wrap') || target.querySelector('table');
+  const sourceTable=target.querySelector('.rsm-table');
+  const sourceTotalbar=target.querySelector('.rsm-totalbar');
   const btn=document.querySelector(`.room-summary-export-btn[onclick*="${targetId}"]`);
   if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> กำลังสร้างรูป...'; }
 
   let clone=null;
+  let totalbarClone=null;
+  let wrapper=null;
+  let exportFrame=null;
   try{
-    if(!sourceWrap) throw new Error('ไม่พบตารางสรุปเงินห้อง');
-    clone=sourceWrap.cloneNode(true);
-    clone.style.position='absolute';
-    clone.style.left='-99999px';
-    clone.style.top='0';
+    if(!sourceTable) throw new Error('ไม่พบตารางสรุปเงินห้อง');
+    clone=sourceTable.cloneNode(true);
+    exportFrame=document.createElement('div');
+    exportFrame.style.position='absolute';
+    exportFrame.style.left='-99999px';
+    exportFrame.style.top='0';
+    exportFrame.style.width='fit-content';
+    exportFrame.style.height='fit-content';
+    exportFrame.style.maxWidth='none';
+    exportFrame.style.maxHeight='none';
+    exportFrame.style.overflow='visible';
+    exportFrame.style.opacity='1';
+    exportFrame.style.visibility='visible';
+    exportFrame.style.pointerEvents='none';
+    exportFrame.style.zIndex='2147483647';
+    // ใช้สีพื้นหลังตามธีมที่เว็บตั้งอยู่จริง (อ่านค่าจาก CSS variable สดๆ) แทนสีเข้มตายตัว
+    // เพราะเซลล์สถานะจ่ายเงิน (เขียว/เหลือง/เทา) เป็นพื้นหลังแบบโปร่งใสที่อิงสีด้านหลังตัวเอง
+    // ถ้า background ของเฟรมส่งออกล็อกเป็นสีเข้มตลอด พอเว็บตั้งธีมสว่าง เซลล์พวกนี้จะกลายเป็นสีดำ/เข้มผิดที่
+    const rootStyles=getComputedStyle(document.documentElement);
+    const isLightTheme=document.documentElement.dataset.theme==='light';
+    const themeBg=(rootStyles.getPropertyValue('--bg')||'').trim() || (isLightTheme?'#f8fafc':'#030712');
+    exportFrame.style.background=themeBg;
+    exportFrame.style.color='var(--text)';
+    exportFrame.style.padding='0';
+    exportFrame.style.boxSizing='content-box';
+    clone.style.position='static';
     clone.style.width='max-content';
+    clone.style.minWidth='max-content';
     clone.style.maxWidth='none';
-    clone.style.maxHeight='none';
     clone.style.height='auto';
+    clone.style.maxHeight='none';
     clone.style.overflow='visible';
-    clone.style.opacity='1';
-    clone.style.visibility='visible';
-    clone.style.pointerEvents='none';
-    clone.style.zIndex='2147483647';
-    clone.style.background='var(--bg2)';
-    clone.style.color='var(--text)';
-    clone.style.borderCollapse='collapse';
     clone.style.margin='0';
     clone.style.padding='0';
-    clone.style.display='inline-block';
-    if(clone.classList.contains('rsm-table-wrap')){
-      clone.style.minWidth='max-content';
-    }
-    const table=clone.querySelector('.rsm-table');
-    if(table){
-      table.style.tableLayout='auto';
-      table.style.width='max-content';
-      table.style.minWidth='max-content';
-      table.style.margin='0';
-      table.style.padding='0';
-    }
-    const cells=clone.querySelectorAll('.rsm-th-name, .rsm-td-name, .rsm-th-total, .rsm-td-total, .rsm-table th, .rsm-table td');
+    clone.style.display='table';
+    clone.style.tableLayout='auto';
+    clone.style.borderCollapse='collapse';
+    clone.style.boxSizing='border-box';
+    // บังคับขนาดตัวอักษร/ระยะห่างให้เท่ากันเสมอ ไม่ว่าจะกดส่งออกจากจอมือถือ (แคบ) หรือคอม (กว้าง)
+    // ปกติค่าพวกนี้จะถูกปรับลดโดย @media(max-width:640px) บนมือถือ ทำให้ตารางที่วัดได้ก่อนแคปเจอร์ไม่ตรงกับบนคอม
+    clone.style.fontSize='12px';
+    const cells=clone.querySelectorAll('.rsm-th-name, .rsm-td-name, .rsm-th-total, .rsm-td-total, th, td');
     cells.forEach(cell=>{
       cell.style.position='static';
       cell.style.left='auto';
       cell.style.whiteSpace='nowrap';
+      cell.style.padding='8px 9px';
     });
+    const theadCells=clone.querySelectorAll('thead th');
+    theadCells.forEach(cell=>{ cell.style.fontSize='10px'; });
     const nameCells=clone.querySelectorAll('.rsm-th-name, .rsm-td-name');
     nameCells.forEach(cell=>{
       cell.style.width='220px';
@@ -3257,7 +3333,7 @@ async function exportRoomSummaryImage(targetId, fileName){
       cell.style.maxWidth='220px';
       cell.style.paddingLeft='12px';
       cell.style.paddingRight='14px';
-      cell.style.borderRight='2px solid rgba(255,255,255,0.08)';
+      cell.style.borderRight='2px solid var(--border2)';
     });
     const totalCells=clone.querySelectorAll('.rsm-th-total, .rsm-td-total');
     totalCells.forEach(cell=>{
@@ -3267,11 +3343,62 @@ async function exportRoomSummaryImage(targetId, fileName){
       cell.style.paddingLeft='10px';
       cell.style.paddingRight='10px';
     });
-    document.body.appendChild(clone);
+    const dataCells=clone.querySelectorAll('.rsm-cell');
+    dataCells.forEach(cell=>{
+      cell.style.width='42px';
+      cell.style.minWidth='42px';
+      cell.style.maxWidth='42px';
+      cell.style.fontSize='12px';
+    });
+
+    // ครอบตาราง+แถบสรุปยอด (เดือน/สถานะจ่ายครบ) ไว้ในกล่องเดียวกัน ให้ export ออกมาด้วยกัน
+    // ใช้ inline-flex column + align-items:stretch เพื่อให้แถบสรุปยอดขยายกว้างเท่าตารางโดยอัตโนมัติ
+    // (ตารางตั้ง width:max-content ไว้แล้วจึงไม่ถูกยืด กลายเป็นตัวกำหนดความกว้างรวมแทน)
+    wrapper=document.createElement('div');
+    wrapper.style.display='inline-flex';
+    wrapper.style.flexDirection='column';
+    wrapper.style.alignItems='stretch';
+    wrapper.style.gap='10px';
+    if(sourceTotalbar){
+      totalbarClone=sourceTotalbar.cloneNode(true);
+      totalbarClone.style.margin='0';
+      totalbarClone.style.display='flex';
+      totalbarClone.style.flexDirection='row';
+      totalbarClone.style.justifyContent='space-between';
+      totalbarClone.style.alignItems='center';
+      totalbarClone.style.flexWrap='nowrap';
+      totalbarClone.style.whiteSpace='nowrap';
+      totalbarClone.style.boxSizing='border-box';
+      totalbarClone.querySelectorAll('*').forEach(n=>{ n.style.whiteSpace='nowrap'; });
+      wrapper.appendChild(totalbarClone);
+    }
+    wrapper.appendChild(clone);
+    exportFrame.appendChild(wrapper);
+    document.body.appendChild(exportFrame);
 
     await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 
-    const canvas=await html2canvas(clone,{backgroundColor:'#030712',scale:1.8,useCORS:true,logging:false,width:clone.scrollWidth, height:clone.scrollHeight, windowWidth:clone.scrollWidth, windowHeight:clone.scrollHeight});
+    const tableBounds=wrapper.getBoundingClientRect();
+    const rawWidth=Math.ceil(tableBounds.width);
+    const rawHeight=Math.ceil(tableBounds.height);
+    exportFrame.style.width=`${rawWidth}px`;
+    exportFrame.style.height=`${rawHeight}px`;
+
+    // ── กันภาพถูกตัดขาดบนมือถือ ──────────────────────────────────────
+    // เบราว์เซอร์/อุปกรณ์แต่ละแบบรองรับขนาด canvas สูงสุดไม่เท่ากัน โดยเฉพาะ iOS Safari (และเบราว์เซอร์บน iOS
+    // ทุกตัว ซึ่งใช้ WebKit เหมือนกัน) ที่จำกัดไว้แค่ราว 4096×4096 พิกเซล ในขณะที่คอม/เดสก์ท็อปรองรับหลักหมื่นพิกเซล
+    // ถ้าปล่อยให้ scale คงที่ที่ 2 ตารางที่มีคนเยอะหรือหลายเดือน/สัปดาห์อาจเกินขีดจำกัดนี้บนมือถือ ทำให้ภาพถูกครอปเงียบๆ
+    // (ได้ไฟล์ png ออกมาจริง แต่เนื้อหาขาดหาย) วิธีแก้คือคำนวณ scale แบบไดนามิก ให้ครบทุกแถว/คอลัมน์เสมอ
+    // โดยยอมลดความคมชัดลงเฉพาะเมื่อจำเป็น แทนที่จะเสี่ยงให้ถูกตัด
+    const MAX_CANVAS_DIM=4000;       // เผื่อระยะห่างจากลิมิต 4096px ของ iOS Safari
+    const MAX_CANVAS_AREA=15000000;  // เผื่อระยะห่างจากลิมิตพื้นที่รวมของอุปกรณ์ที่จำกัดกว่านั้น
+    let scale=2;
+    scale=Math.min(scale, MAX_CANVAS_DIM/rawWidth, MAX_CANVAS_DIM/rawHeight);
+    scale=Math.min(scale, Math.sqrt(MAX_CANVAS_AREA/(rawWidth*rawHeight)));
+    if(!isFinite(scale)||scale<=0) scale=1;
+    scale=Math.max(scale, 0.2);
+
+    const canvas=await html2canvas(exportFrame,{backgroundColor:themeBg,scale,useCORS:true,logging:false,width:rawWidth,height:rawHeight,windowWidth:rawWidth,windowHeight:rawHeight,scrollX:0,scrollY:0});
     const link=document.createElement('a');
     link.download=`${fileName}-${new Date().toISOString().slice(0,10)}.png`;
     link.href=canvas.toDataURL('image/png');
@@ -3280,7 +3407,7 @@ async function exportRoomSummaryImage(targetId, fileName){
     console.error(e);
     alert('ไม่สามารถสร้างภาพสรุปเงินห้องได้ในขณะนี้');
   }finally{
-    if(clone && clone.parentNode) clone.remove();
+    if(exportFrame && exportFrame.parentNode) exportFrame.remove();
     if(btn){
       setTimeout(()=>{
         btn.disabled=false;
@@ -3337,9 +3464,14 @@ function showAlert(el, msg) {
 }
 
 /* ── THEME ── */
+function syncThemeColorMeta(theme){
+  const m=document.getElementById('themeColorMeta');
+  if(m) m.setAttribute('content', theme==='light' ? '#f8fafc' : '#030712');
+}
 (function(){
   const s=localStorage.getItem('42hub_theme')||'dark';
   document.documentElement.dataset.theme=s;
+  syncThemeColorMeta(s);
   const btn = document.getElementById('themeBtn');
   if(btn){
     const moon = btn.querySelector('.moon-ico');
@@ -3357,6 +3489,7 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   const n=document.documentElement.dataset.theme==='dark'?'light':'dark';
   document.documentElement.dataset.theme=n;
   localStorage.setItem('42hub_theme',n);
+  syncThemeColorMeta(n);
   const btn = document.getElementById('themeBtn');
   if(btn){
     const moon = btn.querySelector('.moon-ico');
@@ -3686,6 +3819,8 @@ async function runDbCommand(){
   if(wc) wc.value=new Date().getMonth()+1;
   const rsm=document.getElementById('rsm-month');
   if(rsm) rsm.value=new Date().getMonth()+1;
+  const adminRsm=document.getElementById('admin-rsm-month');
+  if(adminRsm) adminRsm.value=new Date().getMonth()+1;
 })();
 
 // Ensure lucide icons are rendered after initial load and after dynamic updates
@@ -3780,6 +3915,7 @@ ensureLucideIcons();
           <span><span class="rsm-swatch rsm-partial"></span>จ่ายไม่ครบ</span>
           <span><span class="rsm-swatch rsm-unpaid"></span>ยังไม่จ่าย</span>
         </div>
+        <div class="rsm-scroll-hint"><i data-lucide="move-horizontal" class="inline-ico"></i> เลื่อนซ้าย-ขวาเพื่อดูสัปดาห์อื่น</div>
         <div id="rsm-totalbar"></div>
         <div id="rsm-body"><span class="loading-spinner"></span></div>
       </div>
