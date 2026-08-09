@@ -1,6 +1,6 @@
 {
-  "name": "KCI 402",
-  "short_name": "402 Hub",
+  "name": "KCI",
+  "short_name": "KCI",
   "description": "ระบบจัดการห้องเรียน 402 คำชะอีวิทยาคาร",
   "start_url": "./index.html",
   "scope": "./",
