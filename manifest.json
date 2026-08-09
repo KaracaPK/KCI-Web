@@ -1,7 +1,7 @@
 {
-  "name": "4/2 Hub - คำชะอีวิทยาคาร",
-  "short_name": "4/2 Hub",
-  "description": "ระบบจัดการห้องเรียน 4/2 คำชะอีวิทยาคาร",
+  "name": "KCI 402",
+  "short_name": "402 Hub",
+  "description": "ระบบจัดการห้องเรียน 402 คำชะอีวิทยาคาร",
   "start_url": "./index.html",
   "scope": "./",
   "id": "./index.html",
